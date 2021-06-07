@@ -23,6 +23,8 @@ add:
         args: '-1, 1'
         res: 0
         delta: 0
+        # by default, every test has a score of 1
+        score: 3
     performance:
       small_int:
         visible: true
@@ -67,6 +69,7 @@ sub:
         args: [-1, 1]
         res: -2
         delta: 0
+        score: 3
     performance:
       small_int:
         visible: true

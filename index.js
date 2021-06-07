@@ -90,6 +90,8 @@ class Challenge {
       all,
       pass: true,
       suites: {},
+      score: 0,
+      maxScore: 0,
     };
     let fails = 0;
 
@@ -102,7 +104,9 @@ class Challenge {
 
       results.suites[suiteName] = {
         pass: true,
-        tests: {}
+        tests: {},
+        score: 0,
+        maxScore: 0,
       };
       console.log(suiteName);
 
@@ -110,7 +114,7 @@ class Challenge {
         const test = suite[testName];
 
         if (all || test.visible) {
-          process.stdout.write(`  ${testName} (${test.args} => ${JSON.stringify(test.res)}) ... `);
+          process.stdout.write(`  ${testName} ${chalk.dim(`(${test.args} => ${JSON.stringify(test.res)}) ... `)}`);
 
           const testResult = runTest(this.data.fn_name, test, content);
 
@@ -141,6 +145,15 @@ class Challenge {
               console.log(`      ${JSON.stringify(testResult.res)}`)
             }
           }
+
+          // default to 1 if not specified
+          const score = test.score || 1;
+          results.maxScore += score;
+          results.suites[suiteName].maxScore += score;
+          if (testResult.pass) {
+            results.score += score;
+            results.suites[suiteName].score += score;
+          }
         }
       }
     }
@@ -166,7 +179,26 @@ class Challenge {
 
     await this.test(true);
 
-    // TODO calc score
+    console.log();
+    console.log('Suite scores:')
+    for (const suiteName in this.testResults.suites) {
+      const suite = this.testResults.suites[suiteName];
+      const perc = suite.score / suite.maxScore * 100;
+      const scoreText = `${Math.floor(perc)}% (${suite.score}/${suite.maxScore})`
+      console.log(`  ${suiteName}: ${(
+          perc > 70 ? chalk.bold.green(scoreText) 
+        : perc > 60 ? chalk.bold.yellow(scoreText)
+        : chalk.bold.red(scoreText)
+      )}`);
+    }
+    console.log();
+    const perc = this.testResults.score / this.testResults.maxScore * 100;
+    const scoreText = `${Math.floor(perc)}% (${this.testResults.score}/${this.testResults.maxScore})`
+    console.log(chalk.bold(`Total score: ${(
+        perc > 70 ? chalk.green(scoreText) 
+      : perc > 60 ? chalk.yellow(scoreText)
+      : chalk.red(scoreText)
+    )}`));
   }
 }
 function runTest(fnName, test, content) {
@@ -256,6 +288,17 @@ function validateChallengeById(cid) {
     if (!challenge.tests) {
       error('no `tests`');
     }
+    Object.keys(challenge).forEach((key) => {
+      if (![
+        'fn_name',
+        'template',
+        'sample_solution',
+        'recommended_time_ms',
+        'tests',
+      ].includes(key)) {
+        warn(`unknown key ${key}`)
+      }
+    })
     if (errors + warnings > 0) {
       // add a separator
       console.log();
@@ -288,6 +331,18 @@ function validateChallengeById(cid) {
         if (typeof test.res === 'number' && test.delta === undefined) {
           warn(`${suiteName}>${testName} has a numeric 'res' but lacks a delta. Set to '0' to disable warning`)
         }
+        Object.keys(test).forEach((key) => {
+          if (![
+            'visible',
+            'args',
+            'res',
+            'delta',
+            'max_time_s',
+            'score',
+          ].includes(key)) {
+            warn(`${suiteName}>${testName} unknown key ${key}`)
+          }
+        })
 
         const res = runTest(challenge.fn_name, test, challenge.sample_solution);
         if (!res.pass) {
