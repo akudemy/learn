@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+
+const {Challenge, challenges, validateChallengeById} = require('..');
+
+const [, , arg1, arg2] = process.argv;
+
+switch (arg1 || '') {
+  case '--help':
+  case '':
+    displayHelp();
+    break;
+  case '--list':
+    console.log(Object.keys(challenges).join('\n'));
+    break;
+  case '--validate':
+    if (arg2) {
+      validateChallengeById(arg2);
+    } else {
+      Object.keys(challenges).forEach(validateChallengeById)
+    }
+    break;
+  default:
+    if (arg1.startsWith('-')) {
+      console.log(`unknown argument "${arg1}"`);
+      console.log();
+      displayHelp();
+      break;
+    }
+    (async () => {
+      const challenge = new Challenge(arg1);
+      await challenge.run()
+    })()
+      .catch((e) => {
+
+        console.error(e);
+        process.exit(1);
+      });
+}
+function displayHelp() {
+  console.log('Usage:');
+  console.log('  learn --help: show this message');
+  console.log('  learn --list: list challenge ids');
+  console.log('  learn --validate [id]: validate challenge, or all if id unspecified');
+  console.log('  learn <id>: start a challenge');
+  console.log('');
+  console.log('Learn more at github.com/step-4/learn');
+}

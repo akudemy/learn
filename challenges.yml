@@ -1,0 +1,87 @@
+add:
+  fn_name: add
+  template: |
+    function add(a, b) {
+      // add a and b
+    }
+  sample_solution: |
+    function add(a, b) { return a + b }
+  recommended_time_ms: 60e3 # 1 min
+  tests:
+    correctness:
+      small_int:
+        visible: true
+        args: 1, 1
+        res: 2
+        delta: 0
+      small_float:
+        args: 1.1, 0.1
+        res: 1.2
+        delta: 1e-3
+    edges:
+      neg_and_pos: 
+        args: '-1, 1'
+        res: 0
+        delta: 0
+    performance:
+      small_int:
+        visible: true
+        args: 1, 1
+        res: 2
+        delta: 0
+        # anything with `max_time_s` is always benchmarked, for 0.5s
+        max_time_s: 0.010 # 10ms
+      big_int:
+        visible: true
+        args: 10000, 20000
+        res: 30000
+        delta: 0
+        max_time_s: 0.025
+      huge_int:
+        args: 1e10, 2e10
+        res: 3e10
+        delta: 0
+        max_time_s: 0.100
+sub:
+  fn_name: sub
+  template: |
+    function sub(a, b) {
+      // sub a and b
+    }
+  sample_solution: |
+    function sub(a, b) { return a - b }
+  recommended_time_ms: 60e3 # 1 min
+  tests:
+    correctness:
+      small_int:
+        visible: true
+        args: [1, 1]
+        res: 0
+        delta: 0
+      small_float:
+        args: [1.1, 0.1]
+        res: 1
+        delta: 1e-3
+    edges:
+      neg_and_pos: 
+        args: [-1, 1]
+        res: -2
+        delta: 0
+    performance:
+      small_int:
+        visible: true
+        args: [1, 1]
+        res: 0
+        delta: 0
+        max_time_s: 0.010
+      big_int:
+        visible: true
+        args: [10000, 20000]
+        res: -10000
+        delta: 0
+        max_time_s: 0.025
+      huge_int:
+        args: [1e10, 2e10]
+        res: -1e10
+        delta: 0
+        max_time_s: 0.100
