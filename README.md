@@ -17,3 +17,4 @@ To fix bugs or add functionality, make a PR. The bulk of the logic is in `index.
 - infinite loop/timeout checker
 - get challenges from other packages
 - add ability to run multiple challenges at once, so the user can switch through them at the pace they desire, within the same time limit
+- make `learn` executable more easily reachable
