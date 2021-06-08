@@ -47,8 +47,51 @@
 #         # about testing cyclomatic complexity
 #         max_time_ms?: 10
 
+add:
+  source: testing sample
+  tags:
+    - maths
+  difficulty: trivial
+  fn_name: add
+  template: |
+    function add(a, b) {
+      // add a and b
+    }
+  sample_solution: |
+    function add(a, b) { return a + b }
+  recommended_time_ms: 60e3 # 1 min
+  tests:
+    correctness:
+      small_int:
+        visible: true
+        args: 1, 1
+        res: 2
+      small_float:
+        args: 1.1, 0.1
+        res: 1.2
+        delta: 1e-3
+    edge_cases:
+      neg_and_pos: 
+        args: '-1, 1'
+        res: 0
+        score: 3
+    performance:
+      small_int:
+        visible: true
+        args: 1, 1
+        res: 2
+        max_time_ms: 10
+      big_int:
+        visible: true
+        args: 10000, 20000
+        res: 30000
+        max_time_ms: 25
+      huge_int:
+        args: 1e10, 2e10
+        res: 3e10
+        max_time_ms: 100
 parens-count:
-  source: modified https://adventofcode.com/2015/day/1
+  source: modified from https://adventofcode.com/2015/day/1
   difficulty: trivial
   fn_name: count
   template: |
@@ -126,86 +169,101 @@ parens-count:
         res: 2
         max_time_ms: 2
         score: 3
-add:
-  source: testing sample
+visit-cells:
+  source: modified https://adventofcode.com/2015/day/3
   tags:
-    - maths
-  difficulty: trivial
-  fn_name: add
+    - data_structures
+  difficulty: easy
+  fn_name: countVisitedCells
   template: |
-    function add(a, b) {
-      // add a and b
+    // A cursor is traversing an infinite two-dimensional grid of cells
+    //
+    // It first visits the cell at the starting location, then reads the next character and
+    // moves by one cell accordingly: up (^), down (v), right (>), or left (<).
+    // 
+    // The function should return the number of cells visited *at least* once
+    // 
+    // For example:
+    //  - `>` visits 2 cells: one at the starting location, and one to the right.
+    //  - `^>v<` visits 4 cells in a square, visiting the starting/ending location twice.
+    //  - `^v^v^v^v^v` visits 2 cells, repeatedly.
+
+    function countVisitedCells(instructions /* string, length <= 1000 */) {
+
     }
   sample_solution: |
-    function add(a, b) { return a + b }
-  recommended_time_ms: 60e3 # 1 min
+    function countVisitedCells(instructions /* string, length <= 1000 */) {
+      const cursor = {x:0, y:0};
+      const cells = new Set();
+      const addCell = () => cells.add(cursor.x + ',' + cursor.y);
+
+      addCell();
+      for (const char of instructions) {
+        switch (char) {
+          case '>': cursor.x += 1; break;
+          case '<': cursor.x -= 1; break;
+          case 'v': cursor.y += 1; break;
+          case '^': cursor.y -= 1; break;
+        }
+        addCell();
+      }
+
+      return cells.size;
+    }
+  recommended_time_ms: 240e3 # 4 minutes
   tests:
     correctness:
-      small_int:
+      right:
         visible: true
-        args: 1, 1
+        args: '">"'
         res: 2
-      small_float:
-        args: 1.1, 0.1
-        res: 1.2
-        delta: 1e-3
+      left:
+        args: '"<"'
+        res: 2
+      up:
+        args: '"^"'
+        res: 2
+      down:
+        args: '"v"'
+        res: 2
+      right_2:
+        visible: true
+        args: '">>"'
+        res: 3
+      square:
+        visible: true
+        args: '"^>v<"'
+        res: 4
+      vertical_zigzag:
+        visible: true
+        args: '"^v^v^v^v^v"'
+        res: 2
+      random_20char:
+        # Array(20).fill(0).map(x => 'v^<>'[Math.random() * 4 |0]).join('')
+        args: '">>v><v<^v^v>^>^<v<<v"'
+        res: 11
+      random_100char:
+        # Array(100).fill(0).map(x => 'v^<>'[Math.random() * 4 |0]).join('')
+        args: '"^<^vvv^<<^>^v>^<v^><<vv<v^vvv^^v<v<v>^^vv<<^><^v>>v^<^<vv^<^>^>v>>>>>^v^vv>>><^^vv<>^v^v<>v>v^><>^^v"'
+        res: 44
+      random_1000char:
+        args: '"v<><^>>^<v>^v<vvv>><>^v<>^><>^<v>>vvv<^^^v<^^>>v><>^><>^v^v><<>>>v><>^>>><v^^v>^^<v>>>^v^v^^^>vvvvv^^>>>v>>^^v>v<^^vv^v>^<>v><v>^^^<^<^<><>v^vv<><^<^^^v<>^>v^>^>^v<v<^v><v<>^v<v><>vvv<^v>v<<>^><<<<^vv<v><^<^v>v>><^^<^^vvv<<v><v<<<<v>^<<^^>v>v^v^v<^><v^v<^vv><v^^>^^<v<>>><<>><>^v>>v<<v<^<<^>v>^><^<>v^^v<^<<v^<v>>v^v^<<v<^^<<^<v><^>^v^<v<^<v^v^><<v^v<<v<><^v<<^><>^<<v<^<^^><v<v>v^><<>^><>^<<v<^<^v>v^>v>>>vv>v^v>><<^^>vv>vvvv^><<><><>^<<^>>v><^<v<>>>^v^<><<^><<<>><v>^<v^>^vvv^>>v<^v>v>^^<>^v^v^v>v>v^^<>><><<^<v>>^>v<<^><><vvvv^vv>vv>vv>vvv<^<>v<><<>v>>^<<^<<<^<>^^><^^>>>v<^^vvvv><^v<>^>>v>^<v>^>v><v><>^<<^^^^>^^v^><<^^^<>^v><<<^<v^><>^^^><>>v<<^v>^<^^^vv><>v>>><<^><^^^<><vvvv^<vv^>>^<v<<^>vvv<>>vvv>v>>v<^<<<vv<v^^^^<>^<^<>^^>^^<>>v>v><v<v><<<vv><<>>>>^>^v<v>^v<>v<<<v>>v><v<>v^>>><vvv^v^^>vv^v><<^^^><>^^v>v<<<>>vv>>>v^>^>v>><v>>>v^<v><vv>><v<><v<vvv^<>v^<>v>v<>vv>^^<>>v<>vv^^^>^^^>^v>^<<<<^v><v^^^^<>v^^vv>>vv^vv>^v^<v<^^>^^<^^^v^vv^vv<<^<><>><>v>><v^<^vvv>><^><v>>v<v<vv>^<v<^^>^vv<>vv<v^^^"'
+        res: 335
     edge_cases:
-      neg_and_pos: 
-        args: '-1, 1'
-        res: 0
-        score: 3
-    performance:
-      small_int:
-        visible: true
-        args: 1, 1
-        res: 2
-        max_time_ms: 10
-      big_int:
-        visible: true
-        args: 10000, 20000
-        res: 30000
-        max_time_ms: 25
-      huge_int:
-        args: 1e10, 2e10
-        res: 3e10
-        max_time_ms: 100
-sub:
-  source: testing sample
-  fn_name: sub
-  template: |
-    function sub(a, b) {
-      // sub a and b
-    }
-  sample_solution: |
-    function sub(a, b) { return a - b }
-  recommended_time_ms: 60e3 # 1 min
-  tests:
-    correctness:
-      small_int:
-        visible: true
-        args: [1, 1]
-        res: 0
-      small_float:
-        args: [1.1, 0.1]
+      empty:
+        args: '""'
         res: 1
-        delta: 1e-3
-    edge_cases:
-      neg_and_pos: 
-        args: [-1, 1]
-        res: -2
-        score: 3
+      no_directions:
+        args: '"hi"'
+        res: 1
+      mixed_directions:
+        args: '"hvi"'
+        res: 2
     performance:
-      small_int:
-        visible: true
-        args: [1, 1]
-        res: 0
-        max_time_ms: 10
-      big_int:
-        visible: true
-        args: [10000, 20000]
-        res: -10000
-        max_time_ms: 25
-      huge_int:
-        args: [1e10, 2e10]
-        res: -1e10
-        max_time_ms: 100
+      random_1000char:
+        # Array(1000).fill(0).map(x => 'v^<>'[Math.random() * 4 |0]).join('')
+        args: '"<v<><<^^v^><^><>^<v>>^^^>^><<<^v><^>>><><<<<<^<^<<vvv><>><<^^>><v>>^v<<^v<<>^vv>^>>v<<v^>>^^><<>v><vv<^^<vv^<vv^>^^<>v<^>v>v^<v>>^<<^^<>>^<v^vv>v>^>^^vvv^>^>^v>vvv>^vv<^<v<>><><^<>v^>v^>^^<>>>>^<>>>>>vv^>^>>^<<<^>^<>v<>v<v^^vvv^>>><vvv>^<^>^>v^^>v>^<>>v<><v^<v<<^^<<>>><^<<>><<^v<>^v^>>v>v^v<^^>^<>v^v>^<^>^>>>>>^<<v<^<><><v<>^vv^^^<vv<>vv^^>vv>^><v><>^<^^v^v^^<>v>><>v><v^^>^>>v><^^<vvv^^v>v<><^v^><<v^<<>^<v<><^v^<>v>^vv^>v^^vv^^<vv^v<><^<v>>vv^v<>v^<<^>>^<^><vv<^^^^>v>vv<>v<v<<>vvvvv>>^<<v>>vv<^^<^<>>^<v<<^^><>>^<v<vvv<<v^^^v>^<^><v^<v^^vv><v<v>^>>v<vvv^<<>>^v^<^^^v^>^^<^^^<<^<><^v<>vv^^v>v^<<^^>^v>^<<^v>^v<^^<v>v>^v>^>>>>><^^<>^^>>v<^<<^>^^<<>>^v>vvv<vv^<<^<<^vv>v^vv^^^>>v^^<><v^>v<<^<<v^v>v>>^>^<<<>^<v><<<v<><^<v^^>^v>>^^^v<^^^<v^v<^<v<<>^^<>vv>^v>v>v<^>>vv<<^>v>^^vv^>^v>>^>v><<^vvvv>><^v^^>^^v><^<^<>><vv^^<<vv^v><^<>v><>^>^>^v^<<<v^>>vvv<<^v<v><^>>v<<<v>>v^>v<vv^^v>^^<^^v<v^v<v<<>v><v<<>v<>v<>>^>v^vvv^><^>v<<>>>v<><><^vv><^v^^^v^v^<^<>^><^>v>^v^>^v^^vvv<>^v<<<^^^^^vv^>v^^>^^><<vv^^>^"'
+        res: 295
+        max_time_ms: 0.4 # sample sol is 0.08ms on a fast machine
+        score: 3
+

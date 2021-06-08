@@ -133,10 +133,11 @@ class Challenge {
             if (test.max_time_ms && testResult.time > test.max_time_ms) {
               console.log(`    went over limit of ${chalk.bold(test.max_time_ms)}ms`);
             } else if (testResult.error) {
-              console.log(`    received error while running: ${testResult.error}`);
+              console.log(`    received error while running: ${
+                prettyObject(testResult.error, '    ', true)}`);
             } else {
               console.log('    expected');
-              process.stdout.write(`      ${JSON.stringify(test.res)}`);
+              process.stdout.write(prettyObject(test.res, '      '));
               if (test.delta) {
                 process.stdout.write(` ± ${(test.delta/2)}`)
               }
@@ -370,9 +371,9 @@ function validateChallengeById(cid) {
         const res = runTest(challenge.fn_name, test, challenge.sample_solution);
         if (!res.pass) {
           error(`${suiteName} > ${testName} failed:\n    got: ${
-            indent(JSON.stringify(res, null, ' '), '    ', true)
+            prettyObject(res, '    ', true)
           }\n    test: ${
-            indent(JSON.stringify(test, null, ' '), '    ', true)
+            prettyObject(test, '    ', true)
           }`);
         }
       }
@@ -459,6 +460,9 @@ function indent(text, indentation, ignoreFirstLine=false) {
     }
     return indentation + line;
   }).join('\n');
+}
+function prettyObject(obj, indentation='', ignoreFirstLine=false) {
+  return indent(JSON.stringify(obj, null, ' '), indentation, ignoreFirstLine);
 }
 
 module.exports = {
