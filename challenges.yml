@@ -17,7 +17,7 @@
 #     }
 #   recommended_time_ms: time in ms in which you should try to finish the challenge
 #   tests:
-#     <suite>: # usually one of correctness/edges/performance
+#     <suite>: # usually one of correctness/edge_cases/performance
 #       <name>:
 #         # set if you want the user to see the test before submitting the challenge
 #         visible?: true
@@ -32,7 +32,7 @@
 #
 #         # set if `res` is numeric, to account for floating point errors.
 #         # The test will pass if received output is within `delta/2` of `res`.
-#         # You can set it to 0 if you want precise results
+#         # You can set it to the default of 0 if you want precise results
 #         delta?: 1e-5
 #
 #         # Every test is 1 point by default, and the final score is the achieved points
@@ -42,9 +42,90 @@
 #
 #         # If this is set, the test will be benchmarked, and the test will fail if the average
 #         # runtime is bigger than this property.
-#         # Benchmarks only run for 500ms, so having a time higher than that will be pointless
+#         # Benchmarks only run for 500ms, so having a time higher than that will be pointless.
+#         # The performance depends on the user's machine, so allow plenty of leeway. It should be
+#         # about testing cyclomatic complexity
 #         max_time_ms?: 10
 
+parens-count:
+  source: modified https://adventofcode.com/2015/day/1
+  difficulty: trivial
+  fn_name: count
+  template: |
+    // You're given a string of characters, some of which are `()`.
+    //
+    // Starting at 0, the state should
+    // - increment by 1 when you encounter a `(`
+    // - decrement by 1 when you encounter a `)`
+    //
+    // The state is not bound.
+    //
+    // Return the state at the end of the string.
+    function count(parens /* string, length <= 20 */) {
+      
+    }
+  sample_solution: |
+    function count(parens) {
+      let state = 0;
+      for (const char of parens) {
+        if (char === '(') state += 1;
+        else if (char === ')') state -= 1;
+      }
+      return state;
+    }
+  recommended_time_ms: 180e3 # 3 min
+  tests:
+    correctness:
+      one_up:
+        visible: true
+        args: '"("'
+        res: 1
+      one_down:
+        visible: true
+        args: '")"'
+        res: -1
+      one_up_down:
+        visible: true
+        args: '"()"'
+        res: 0
+      one_down_up:
+        args: '")("'
+        res: 0
+      all_up:
+        args: '"(((((((((((((((((((("'
+        res: 20
+      all_down:
+        args: '"))))))))))))))))))))"'
+        res: -20
+      random_5char:
+        args: '"()(()"'
+        res: 1
+      random_10char:
+        args: '"())(()()))"'
+        res: -2
+      random_20char:
+        args: '"())(()()))(((()()()("'
+        res: 2
+    edge_cases:
+      empty:
+        visible: true
+        args: "''"
+        res: 0
+      mixed_chars:
+        args: '"(hi)"'
+        res: 0
+      mixed_chars_start:
+        args: '"("'
+        res: 1
+      mixed_chars_end:
+        args: '")hi"'
+        res: -1
+    performance:
+      random_20char:
+        args: '"())(()()))(((()()()("'
+        res: 2
+        max_time_ms: 2
+        score: 3
 add:
   source: testing sample
   tags:
@@ -64,34 +145,29 @@ add:
         visible: true
         args: 1, 1
         res: 2
-        delta: 0
       small_float:
         args: 1.1, 0.1
         res: 1.2
         delta: 1e-3
-    edges:
+    edge_cases:
       neg_and_pos: 
         args: '-1, 1'
         res: 0
-        delta: 0
         score: 3
     performance:
       small_int:
         visible: true
         args: 1, 1
         res: 2
-        delta: 0
         max_time_ms: 10
       big_int:
         visible: true
         args: 10000, 20000
         res: 30000
-        delta: 0
         max_time_ms: 25
       huge_int:
         args: 1e10, 2e10
         res: 3e10
-        delta: 0
         max_time_ms: 100
 sub:
   source: testing sample
@@ -109,32 +185,27 @@ sub:
         visible: true
         args: [1, 1]
         res: 0
-        delta: 0
       small_float:
         args: [1.1, 0.1]
         res: 1
         delta: 1e-3
-    edges:
+    edge_cases:
       neg_and_pos: 
         args: [-1, 1]
         res: -2
-        delta: 0
         score: 3
     performance:
       small_int:
         visible: true
         args: [1, 1]
         res: 0
-        delta: 0
         max_time_ms: 10
       big_int:
         visible: true
         args: [10000, 20000]
         res: -10000
-        delta: 0
         max_time_ms: 25
       huge_int:
         args: [1e10, 2e10]
         res: -1e10
-        delta: 0
         max_time_ms: 100

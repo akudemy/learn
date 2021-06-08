@@ -254,7 +254,10 @@ function runTest(fnName, test, content) {
   } catch (e) {
     return {
       pass: false,
-      error: e
+      error: {
+        message: e.message,
+        stack: e.stack,
+      },
     }
   }
 }
@@ -327,8 +330,8 @@ function validateChallengeById(cid) {
     if (!challenge.tests.correctness) {
       warn('no suite named `correctness`');
     }
-    if (!challenge.tests.edges) {
-      warn('no suite named `edges`');
+    if (!challenge.tests.edge_cases) {
+      warn('no suite named `edge_cases`');
     }
     if (!challenge.tests.performance) {
       warn('no suite named `performance`');
@@ -348,8 +351,8 @@ function validateChallengeById(cid) {
         if (suiteName === 'performance' && !test.max_time_ms) {
           warn(`${suiteName}>${testName} lacks a 'max_time_ms'. Set to '!!float Infinity' to disable warning`);
         }
-        if (typeof test.res === 'number' && test.delta === undefined) {
-          warn(`${suiteName}>${testName} has a numeric 'res' but lacks a delta. Set to '0' to disable warning`)
+        if (typeof test.res === 'number' && (test.res % 1 !== 0) && test.delta === undefined) {
+          warn(`${suiteName}>${testName} has a floating point 'res' but lacks a delta. Set to '0' to disable warning`)
         }
         Object.keys(test).forEach((key) => {
           if (![
@@ -366,7 +369,11 @@ function validateChallengeById(cid) {
 
         const res = runTest(challenge.fn_name, test, challenge.sample_solution);
         if (!res.pass) {
-          error(`${suiteName} > ${testName} failed:\n    res: ${JSON.stringify(res, null, ' ')}\n    test: ${JSON.stringify(test, null, ' ')}`);
+          error(`${suiteName} > ${testName} failed:\n    got: ${
+            indent(JSON.stringify(res, null, ' '), '    ', true)
+          }\n    test: ${
+            indent(JSON.stringify(test, null, ' '), '    ', true)
+          }`);
         }
       }
     }
@@ -444,6 +451,14 @@ function msToReadableDuration(ms, isChildCall=false) {
     return ms + 'ms';
   }
   return '';
+}
+function indent(text, indentation, ignoreFirstLine=false) {
+  return text.split('\n').map((line, i) => {
+    if (i === 0 && ignoreFirstLine) {
+      return line;
+    }
+    return indentation + line;
+  }).join('\n');
 }
 
 module.exports = {
