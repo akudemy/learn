@@ -14,7 +14,6 @@ To add challenges, add a PR modifying `challenges.yml`. Make sure `./bin/learn -
 To fix bugs or add functionality, make a PR. The bulk of the logic is in `index.js`
 
 ## TODO
-- determine final score from tests
 - infinite loop/timeout checker
 - get challenges from other packages
 - add ability to run multiple challenges at once, so the user can switch through them at the pace they desire, within the same time limit
