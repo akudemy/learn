@@ -13,12 +13,16 @@ switch (arg1 || '') {
     console.log(Object.keys(challenges).join('\n'));
     break;
   case '--validate':
+    let hasErrors = false;
+
     if (arg2) {
-      validateChallengeById(arg2);
+      hasErrors = validateChallengeById(arg2);
     } else {
-      Object.keys(challenges).forEach(validateChallengeById)
+      hasErrors = Object.keys(challenges).map(validateChallengeById).some(Boolean);
     }
-    break;
+
+    // quit with an error if there are issues. This eases conditional cli usage
+    process.exit(hasErrors ? 1 : 0);
   default:
     if (arg1.startsWith('-')) {
       console.log(`unknown argument "${arg1}"`);

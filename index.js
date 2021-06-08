@@ -121,7 +121,7 @@ class Challenge {
           results.suites[suiteName].tests[testName] = testResult;
           process.stdout.write(testResult.pass ? chalk.green('ok') : chalk.bold.red('fail'));
           if (testResult.time) {
-            process.stdout.write(` [${sToReadableMs(testResult.time)} ${chalk.dim(`/ ${sToReadableMs(test.max_time_s)}`)}]`);
+            process.stdout.write(` [${testResult.time}ms ${chalk.dim(`/ ${test.max_time_ms}ms`)}]`);
           }
           console.log('')
 
@@ -130,8 +130,8 @@ class Challenge {
             results.pass = false;
             fails++;
 
-            if (test.max_time_s && testResult.time > test.max_time_s) {
-              console.log(`    went over limit of ${chalk.bold(sToReadableMs(test.max_time_s))}`);
+            if (test.max_time_ms && testResult.time > test.max_time_ms) {
+              console.log(`    went over limit of ${chalk.bold(test.max_time_ms)}ms`);
             } else if (testResult.error) {
               console.log(`    received error while running: ${testResult.error}`);
             } else {
@@ -172,14 +172,29 @@ class Challenge {
   async submit() {
     const endTime = Date.now();
     const elapsed = endTime - this.startTime;
+    const elapsedText = msToReadableDuration(elapsed);
 
-    console.log(`Submitting challenge after ${msToReadableDuration(elapsed)}.`);
+    console.log(`Submitting challenge after ${elapsedText}.`);
     console.log(``);
     console.log(`Running tests...`);
 
     await this.test(true);
 
     console.log();
+
+    const timePerc = Math.floor(elapsed/this.data.recommended_time_ms * 100);
+    console.log(`You did it in ${(
+      timePerc < 95 ? chalk.bold.green(elapsedText)
+      : timePerc < 100 ? chalk.bold.yellow(elapsedText)
+      : chalk.bold.red(elapsedText)
+    )} out of ${chalk.bold(msToReadableDuration(this.data.recommended_time_ms))}: ${(
+      timePerc < 95 ? chalk.bold.green('under the limit!')
+      : timePerc < 100 ? chalk.bold.yellow('close to the limit!')
+      : chalk.bold.red('over the limit :/')
+    )}`);
+
+    console.log();
+
     console.log('Suite scores:')
     for (const suiteName in this.testResults.suites) {
       const suite = this.testResults.suites[suiteName];
@@ -220,14 +235,16 @@ function runTest(fnName, test, content) {
       }
     }
 
-    if (result.pass && test.max_time_s) {
+    if (result.pass && test.max_time_ms) {
       // `maxTime: 0.5` limits maximum amount of time a benchmark runs to 0.5s, compared to default 5s
       const benchRes = vm.runInNewContext(content + `;
         /* benchmark runner */ new Benchmark({maxTime: 0.5}, () => ${fnName}(${test.args})).run()`,
         { Benchmark });
-      result.time = benchRes.stats.mean;
 
-      if (test.max_time_s && result.time > test.max_time_s) {
+      // `stats.mean` is s, but `ms` are more manageable
+      result.time = benchRes.stats.mean * 1000;
+
+      if (test.max_time_ms && result.time > test.max_time_ms) {
         result.pass = false;
         result.validityPass = true;
       }
@@ -295,6 +312,9 @@ function validateChallengeById(cid) {
         'sample_solution',
         'recommended_time_ms',
         'tests',
+        'source',
+        'tags',
+        'difficulty',
       ].includes(key)) {
         warn(`unknown key ${key}`)
       }
@@ -325,8 +345,8 @@ function validateChallengeById(cid) {
         if (test.res === undefined) {
           error(`${suiteName}>${testName} lacks 'res'`);
         }
-        if (suiteName === 'performance' && !test.max_time_s) {
-          warn(`${suiteName}>${testName} lacks a 'max_time_s'. Set to '!!float Infinity' to disable warning`);
+        if (suiteName === 'performance' && !test.max_time_ms) {
+          warn(`${suiteName}>${testName} lacks a 'max_time_ms'. Set to '!!float Infinity' to disable warning`);
         }
         if (typeof test.res === 'number' && test.delta === undefined) {
           warn(`${suiteName}>${testName} has a numeric 'res' but lacks a delta. Set to '0' to disable warning`)
@@ -337,7 +357,7 @@ function validateChallengeById(cid) {
             'args',
             'res',
             'delta',
-            'max_time_s',
+            'max_time_ms',
             'score',
           ].includes(key)) {
             warn(`${suiteName}>${testName} unknown key ${key}`)
@@ -363,6 +383,8 @@ function validateChallengeById(cid) {
   } else {
     console.log(chalk.green('ok'));
   }
+
+  return errors > 0;
 }
 
 class CharReader {
@@ -371,7 +393,7 @@ class CharReader {
 
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
-    process.stdin.on('keypress', (str, key) => {
+    process.stdin.on('keypress', (_str, key) => {
       if (this.promises.length > 0) {
         this.promises.shift().resolve(key.name)
       }
@@ -422,9 +444,6 @@ function msToReadableDuration(ms, isChildCall=false) {
     return ms + 'ms';
   }
   return '';
-}
-function sToReadableMs(s) {
-  return (s * 1000).toFixed(2) + 'ms';
 }
 
 module.exports = {

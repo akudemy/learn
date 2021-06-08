@@ -1,4 +1,55 @@
+## challenge template:
+#
+# <challenge_id>:
+#   source?: link to source, if applicable
+#   tags?:
+#     - maths
+#     - data_structures
+#   difficulty?: trivial | easy | medium | hard | Industry_Standard | very_hard
+#   template: |
+#     function <fn_name>(<args>) {
+#       // description of problem
+#     }
+#   sample_solution: |
+#     function <fn_name>(<args>) {
+#       solution of problem that is meant to pass all tests.
+#       This is mostly to make sure you didn't make a mistake in the tests
+#     }
+#   recommended_time_ms: time in ms in which you should try to finish the challenge
+#   tests:
+#     <suite>: # usually one of correctness/edges/performance
+#       <name>:
+#         # set if you want the user to see the test before submitting the challenge
+#         visible?: true
+#
+#         # a string to eval into the arguments for the test.
+#         # Sometimes an array works, but it will be coerced into a string
+#         args: 1, 2
+#
+#         # result. Might get turned into a string. We compare the `JSON.stringify` version
+#         # of the received output with this, using `==`
+#         res: 2
+#
+#         # set if `res` is numeric, to account for floating point errors.
+#         # The test will pass if received output is within `delta/2` of `res`.
+#         # You can set it to 0 if you want precise results
+#         delta?: 1e-5
+#
+#         # Every test is 1 point by default, and the final score is the achieved points
+#         # divided by the maximum achievable points. Preferrably make similar tests of the
+#         # same type, scored at 1, instead of assigning a higher score to a single test.
+#         score?: 2
+#
+#         # If this is set, the test will be benchmarked, and the test will fail if the average
+#         # runtime is bigger than this property.
+#         # Benchmarks only run for 500ms, so having a time higher than that will be pointless
+#         max_time_ms?: 10
+
 add:
+  source: testing sample
+  tags:
+    - maths
+  difficulty: trivial
   fn_name: add
   template: |
     function add(a, b) {
@@ -23,7 +74,6 @@ add:
         args: '-1, 1'
         res: 0
         delta: 0
-        # by default, every test has a score of 1
         score: 3
     performance:
       small_int:
@@ -31,20 +81,20 @@ add:
         args: 1, 1
         res: 2
         delta: 0
-        # anything with `max_time_s` is always benchmarked, for 0.5s
-        max_time_s: 0.010 # 10ms
+        max_time_ms: 10
       big_int:
         visible: true
         args: 10000, 20000
         res: 30000
         delta: 0
-        max_time_s: 0.025
+        max_time_ms: 25
       huge_int:
         args: 1e10, 2e10
         res: 3e10
         delta: 0
-        max_time_s: 0.100
+        max_time_ms: 100
 sub:
+  source: testing sample
   fn_name: sub
   template: |
     function sub(a, b) {
@@ -76,15 +126,15 @@ sub:
         args: [1, 1]
         res: 0
         delta: 0
-        max_time_s: 0.010
+        max_time_ms: 10
       big_int:
         visible: true
         args: [10000, 20000]
         res: -10000
         delta: 0
-        max_time_s: 0.025
+        max_time_ms: 25
       huge_int:
         args: [1e10, 2e10]
         res: -1e10
         delta: 0
-        max_time_s: 0.100
+        max_time_ms: 100
