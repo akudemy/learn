@@ -266,4 +266,255 @@ visit-cells:
         res: 295
         max_time_ms: 0.4 # sample sol is 0.08ms on a fast machine
         score: 3
+shortest-distance:
+  source: modified https://adventofcode.com/2015/day/9 (part 1)
+  tags:
+    - maths
+    - data_structures
+  difficulty: Industry Standard
+  fn_name: shortestDistance
+  recommended_time_ms: 1800e3 # 30 min
+  template: |
+    // Given a string containing distances on each line, of the form:
+    //   ABC to XYZ = 123
+    // return the shortest path between all nodes, as a number.
+    //
+    // You cannot visit the same node twice (by design, it won't lead to shorter routes).
+    // You may start and end at any node.
+    // The distance ABC to XYZ is the same as XYZ to ABC.
+    // If a distance is not specified, there's no direct route between the nodes.
+    // It is guaranteed that there is a valid path.
+    //
+    // e.g. given the string:
+    //   London to Dublin = 464
+    //   London to Belfast = 518
+    //   Dublin to Belfast = 141
+    // the shortest path to visit all of London, Dublin, and Belfast is
+    //   London -> Dublin -> Belfast
+    //         464   +    141
+    // so you should return
+    //   605
+    //
+    // The node names are always made up of only ascii letters,
+    // and the distances are always integers below 1000.
+    // There are at most 8 nodes.
 
+    function shortestDistance(distances /* string, lines <= 30 */) {
+
+    }
+  sample_solution: |
+    function shortestDistance(distances /* string, max lines = 30 */) {
+      if (distances.length === 0) {
+        return 0;
+      }
+
+      const dists = {};
+      const nodeSet = new Set();
+      for (const line of distances.split('\n')) {
+        // `\x20` = space. Using a space messed up syntax highlighting in yaml
+        const [a, /* to */, b, /* = */, distStr] = line.split('\x20');
+        const dist = Number(distStr);
+
+        if (!dists[a]) {
+          dists[a] = {};
+        }
+        dists[a][b] = dist;
+
+        if (!dists[b]) {
+          dists[b] = {};
+        }
+        dists[b][a] = dist;
+
+        nodeSet.add(a);
+        nodeSet.add(b);
+      }
+
+      const nodes = Array.from(nodeSet);
+      const permutations = getPermutations(nodes);
+
+      let shortest = Infinity;
+      perms: for (const perm of permutations) {
+        let path = 0;
+
+        for (let i = 0; i < perm.length - 1; ++i) {
+          const a = perm[i];
+          const b = perm[i+1];
+
+          const dist = dists[a][b];
+
+          if (dist === undefined) continue perms;
+
+          path += dist;
+
+          if (path >= shortest) {
+            continue perms;
+          }
+        }
+
+        shortest = path;
+      }
+
+      return shortest;
+    }
+    // https://stackoverflow.com/a/43260158/3161092
+    function getPermutations(xs) {
+      let ret = [];
+
+      for (let i = 0; i < xs.length; i = i + 1) {
+        let rest = getPermutations(xs.slice(0, i).concat(xs.slice(i + 1)));
+
+        if(!rest.length) {
+          ret.push([xs[i]])
+        } else {
+          for(let j = 0; j < rest.length; j = j + 1) {
+            ret.push([xs[i]].concat(rest[j]))
+          }
+        }
+      }
+      return ret;
+    }
+  tests:
+    correctness:
+      2_linear:
+        args: "'x to y = 6'"
+        res: 6
+      3_linear:
+        args: |
+          `X to Y = 3
+          Y to Z = 2`
+        res: 5
+      3_linear_with_inversion:
+        args: |
+          `X to Y = 3
+          Z to Y = 2`
+        res: 5
+      3_linear_with_reduntant:
+        visible: true
+        args: |
+          `London to Dublin = 464
+          London to Belfast = 518
+          Dublin to Belfast = 141`
+        res: 605
+      8_linear:
+        args: |
+          `a to b = 1
+          b to c = 2
+          c to d = 3
+          d to e = 4
+          e to f = 5
+          f to g = 6
+          g to h = 7
+          h to i = 8`
+        res: 36
+      7_with_28_connections:
+        args: |
+          `Tristram to AlphaCentauri = 34
+          Tristram to Snowdin = 100
+          Tristram to Tambi = 63
+          Tristram to Faerun = 108
+          Tristram to Norrath = 111
+          Tristram to Straylight = 89
+          Tristram to Arbre = 132
+          AlphaCentauri to Snowdin = 4
+          AlphaCentauri to Tambi = 79
+          AlphaCentauri to Faerun = 44
+          AlphaCentauri to Norrath = 147
+          AlphaCentauri to Straylight = 133
+          AlphaCentauri to Arbre = 74
+          Snowdin to Tambi = 105
+          Snowdin to Faerun = 95
+          Snowdin to Norrath = 48
+          Snowdin to Straylight = 88
+          Snowdin to Arbre = 7
+          Tambi to Faerun = 68
+          Tambi to Norrath = 134
+          Tambi to Straylight = 107
+          Tambi to Arbre = 40
+          Faerun to Norrath = 11
+          Faerun to Straylight = 66
+          Faerun to Arbre = 144
+          Norrath to Straylight = 115
+          Norrath to Arbre = 135
+          Straylight to Arbre = 127`
+        res: 251
+        score: 3
+    edge_cases:
+      empty:
+        args: "''"
+        res: 0
+      8_linear_with_shorter_loop:
+        args: |
+          `a to b = 20
+          b to c = 2
+          c to d = 3
+          d to e = 4
+          e to f = 5
+          f to g = 6
+          g to h = 7
+          h to i = 8
+          i to a = 1`
+        res: 36
+      8_linear_with_inversions:
+        args: |
+          `b to a = 1
+          b to c = 2
+          d to c = 3
+          d to e = 4
+          f to e = 5
+          f to g = 6
+          h to g = 7
+          h to i = 8`
+        res: 36
+    performance:
+      3_linear_with_inversions:
+        args: |
+          `London to Dublin = 464
+          London to Belfast = 518
+          Dublin to Belfast = 141`
+        res: 605
+        max_time_ms: 3
+      7_with_28_connections:
+        args: |
+          `Tristram to AlphaCentauri = 34
+          Tristram to Snowdin = 100
+          Tristram to Tambi = 63
+          Tristram to Faerun = 108
+          Tristram to Norrath = 111
+          Tristram to Straylight = 89
+          Tristram to Arbre = 132
+          AlphaCentauri to Snowdin = 4
+          AlphaCentauri to Tambi = 79
+          AlphaCentauri to Faerun = 44
+          AlphaCentauri to Norrath = 147
+          AlphaCentauri to Straylight = 133
+          AlphaCentauri to Arbre = 74
+          Snowdin to Tambi = 105
+          Snowdin to Faerun = 95
+          Snowdin to Norrath = 48
+          Snowdin to Straylight = 88
+          Snowdin to Arbre = 7
+          Tambi to Faerun = 68
+          Tambi to Norrath = 134
+          Tambi to Straylight = 107
+          Tambi to Arbre = 40
+          Faerun to Norrath = 11
+          Faerun to Straylight = 66
+          Faerun to Arbre = 144
+          Norrath to Straylight = 115
+          Norrath to Arbre = 135
+          Straylight to Arbre = 127`
+        res: 251
+        max_time_ms: 200 # 81ms on my machine
+      8_linear_with_shorter_loop:
+        args: |
+          `a to b = 20
+          b to c = 2
+          c to d = 3
+          d to e = 4
+          e to f = 5
+          f to g = 6
+          g to h = 7
+          h to i = 8
+          i to a = 1`
+        res: 36
+        max_time_ms: 2000 # 814ms on my machine
