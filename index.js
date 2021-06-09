@@ -22,6 +22,10 @@ class Challenge {
     this.cid = cid;
     this.data = challenges[cid];
 
+    this.history = {
+      cid: this.cid
+    };
+
     if (!this.data) {
       throw new Error(`No challenge with id ${cid} found`);
     }
@@ -32,6 +36,9 @@ class Challenge {
     await fs.writeFile(challengePath, this.data.template, 'utf8');
 
     this.startTime = Date.now();
+    this.history.startTime = this.startTime;
+    this.history.tests = [];
+    this.history.commands = [];
 
     console.log(`Challenge "${chalk.bold(this.cid)}" started at ${new Date(this.startTime)}.`);
     console.log('');
@@ -54,26 +61,31 @@ class Challenge {
       process.stdout.write('> ');
       const char = await readChar();
 
+      const elapsed = Date.now() - this.startTime;
+
+      this.history.commands.push([char, elapsed])
+
       switch (char) {
         case 'space':
           console.log('[space]');
-          console.log(`Running tests after ${msToReadableDuration(Date.now() - this.startTime)}`)
+          console.log(`Running tests after ${msToReadableDuration(elapsed)}`)
           console.log(``);
           await this.test()
           break;
         case 'return':
           console.log('[enter]');
           await this.submit();
+          await this.saveHistory();
           process.exit(0);
         case 't': 
           console.log('t'); // skip past the `t` the user just pressed
-          const elapsed = Date.now() - this.startTime;
           console.log(`${chalk.bold(msToReadableDuration(elapsed))} /${msToReadableDuration(this.data.recommended_time_ms)} (${Math.floor(elapsed/this.data.recommended_time_ms * 100)}%)`)
           break;
         case 'x':
         case 'c':
           console.log(char); // skip past `char`
-          console.log(`Exiting after ${msToReadableDuration(Date.now() - this.startTime)}`);
+          console.log(`Exiting after ${msToReadableDuration(elapsed)}`);
+          await this.saveHistory();
           process.exit(0);
         default:
           console.log(char); // skip past char
@@ -83,11 +95,12 @@ class Challenge {
     }
   }
 
-  async test(all=false) {
+  async test(isSubmission=false) {
     const content = await fs.readFile('./challenge.js', 'utf-8');
 
     const results = {
-      all,
+      time: Date.now(),
+      isSubmission,
       pass: true,
       suites: {},
       score: 0,
@@ -113,7 +126,7 @@ class Challenge {
       for (const testName in suite) {
         const test = suite[testName];
 
-        if (all || test.visible) {
+        if (isSubmission || test.visible) {
           process.stdout.write(`  ${testName} ${chalk.dim(`(${test.args} => ${JSON.stringify(test.res)}) ... `)}`);
 
           const testResult = runTest(this.data.fn_name, test, content);
@@ -168,6 +181,7 @@ class Challenge {
     }
 
     this.testResults = results;
+    this.history.tests.push(results);
   }
 
   async submit() {
@@ -215,6 +229,16 @@ class Challenge {
       : perc > 60 ? chalk.yellow(scoreText)
       : chalk.red(scoreText)
     )}`));
+
+    this.history.submissionTime = endTime;
+    this.history.finalTest = this.testResults;
+    this.history.timePerc = timePerc;
+    this.history.underTime = timePerc < 100;
+  }
+
+  async saveHistory() {
+    const historyFilePath = path.join(__dirname, 'history.yml')
+    await fs.appendFile(historyFilePath, yml.stringify([this.history]), 'utf-8');
   }
 }
 function runTest(fnName, test, content) {

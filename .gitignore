@@ -1,5 +1,7 @@
-# we don't want this to be modified in git
+# the file to which challenges are written to
 challenge.js
+# the file to which history is saved
+history.yml
 
 ## from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
