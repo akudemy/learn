@@ -7,8 +7,9 @@
 #     - data_structures
 #   difficulty?: trivial | easy | medium | hard | Industry_Standard | very_hard
 #   template: |
-#     function <fn_name>(<args>) {
-#       // description of problem
+#     // description of problem
+#     function <fn_name>(arg1 /* type, properties */, arg2 ...) {
+#
 #     }
 #   sample_solution: |
 #     function <fn_name>(<args>) {
@@ -518,3 +519,276 @@ shortest-distance:
           i to a = 1`
         res: 36
         max_time_ms: 2000 # 814ms on my machine
+look-and-say:
+  source: modified https://adventofcode.com/2015/day/10
+  tags:
+    - strings
+  difficulty: medium
+  recommended_time_ms: 300e3 # 5min
+  fn_name: lookAndSay
+  template: |
+    // A "look and say" iteration of a number generates a new number that is a compressed
+    // form of reading the first number out loud.
+    // Going through the first number from left to right, for each run of a digit, say the
+    // count of those digits, and then the digit.
+    //
+    // For example:
+    // - 1 becomes 11 ("one one", so 1 copy of digit 1)
+    // - 11 becomes 21 ("two ones", so 2 copies of digit 1)
+    // - 21 -> 1211 -> 111221 -> 312211
+    // - 1111111111 -> 101 ("ten ones") -> 111011
+    //
+    // Given a sequence number and iteration number, return the length of the number you'd get by
+    // applying the "look and say" iteration that number of times.
+
+    function lookAndSay(
+      sequence /* number, [0, Number.MAX_SAFE_INTEGER] */,
+      iterations /* number, [0, 50] */,
+    ) {
+      
+    }
+  sample_solution: |
+    function lookAndSay(
+      sequence /* number, [0, Number.MAX_SAFE_INTEGER] */,
+      iterations /* number, [0, 50] */,
+    ) {
+      let str = sequence.toString().split('');
+      for (let i = 0; i < iterations; ++i) {
+        str = iterate(str);
+      }
+      return str.length;
+    }
+    function iterate(str) {
+      let res = [];
+
+      let digit = str[0];
+      let count = 0;
+      for (const char of str) {
+        if (char === digit) {
+          count += 1;
+        } else {
+          res += count + '' + digit;
+          digit = char;
+          count = 1;
+        }
+      }
+      res += count + '' + digit;
+      return res;
+    }
+    
+  tests:
+    correctness:
+      1,1:
+        visible: true
+        args: 1,1
+        res: 2 # 11
+      11,1:
+        visible: true
+        args: 11,1
+        res: 2 # 21
+      21,1:
+        visible: true
+        args: 21,1
+        res: 4 # 1211
+      1,3:
+        visible: true
+        args: 1,3
+        res: 4 # 1211
+      11,2:
+        visible: true
+        args: 11,2
+        res: 4 # 1211
+      1211,1:
+        args: 1211,1
+        res: 6 # 111221
+      1234567890,1:
+        args: 1234567890,1
+        res: 20 # 11121314151617181910
+        score: 3
+      1113122113,40:
+        args: 1113122113,40
+        res: 360154
+    edge_cases:
+      0_iterations:
+        args: 12345,0
+        res: 5 # 12345
+        score: 2
+      more_than_9_runs:
+        args: 1111111111,1
+        res: 3 # 111
+        score: 3
+      max_int:
+        args: 9007199254740991,1
+        res: 26
+        score: 2
+      max_int,10:
+        args: 9007199254740991,10
+        res: 428
+    performance:
+      1,50:
+        args: 1,50
+        res: 1166642
+        max_time_ms: 500 # 327 on my machine
+        score: 4
+      1113122113,50:
+        args: 1113122113,50
+        res: 5103798
+        max_time_ms: 2000 # 1718 on my machine
+        score: 2
+robot-race:
+  source: modified https://adventofcode.com/2015/day/14
+  tags:
+    - maths
+  difficulty: Industry Standard # a lot of edge cases, and a simple major optimization
+  recommended_time_ms: 1500e3 # 25min
+  fn_name: winnerDistance
+  template: |
+    // You are in charge of the schedule for a massive upcoming robot race.
+    // Your job is to find out the exact second that the race is going to end.
+    //
+    // At any point of the race, a robot is in a "go" or "stop" state.
+    //
+    // In the "go" state, the robot is moving towards the finish line at its constant `speed` (units/second).
+    // In the "stop" state, the robot is not moving at all, and cooling down.
+    //
+    // They all start in the "go" state, but after `goTime` seconds, they switch to the "stop" state.
+    // They will be in the "stop" state for `stopTime` seconds, and then go back to the "go" state.
+    //
+    // You are given these specs in a url encoded format. For example, a single robot would look like this:
+    //
+    //   speed=14&goTime=30&stopTime=127
+    //
+    // Each robot spec will be on a different line, and there is no guarantee of the order of the attributes.
+    //
+    // All the attributes are bound between 0 and 10000, including
+    //
+    // At what second (rounded up) will the winning robot have crossed the finish line?
+    // Return `-1` if no robot will finish the race.
+
+    function winnerDistance(specs /* string, lines <= 30 */, distance /* number, [0, 1_000_000_000] */) {
+      
+    }
+  sample_solution: |
+    function winnerDistance(specs /* string, lines <= 30 */, distance /* number, [0, 1_000_000_000] */) {
+      if (distance === 0) {
+        return 0;
+      }
+
+      const robots = specs.split('\n').map(l => {
+        const robot = {};
+        const s = l.split('&');
+        for (const p of s) {
+          const [name, value] = p.split('=');
+          robot[name] = Number(value);
+        }
+        return robot;
+      });
+
+      let fastestTime = -1;
+      for (const robot of robots) {
+        const cycles = Math.floor(distance / (robot.speed * robot.goTime));
+        const remainder = distance - (cycles * robot.speed * robot.goTime);
+
+        if (!Number.isFinite(remainder)) {
+          continue;
+        }
+
+        let time = cycles * (robot.goTime + robot.stopTime) + Math.ceil(remainder / robot.speed);
+        if (remainder === 0) {
+          time -= robot.stopTime;
+        }
+
+        if (!Number.isFinite(time)) {
+          continue;
+        }
+        if (time >= 0 && (time < fastestTime || fastestTime === -1)) {
+          fastestTime = time;
+        }
+      }
+
+      return fastestTime;
+    }
+  tests:
+    correctness:
+      single_end_of_go:
+        visible: true
+        args: "'speed=14&goTime=30&stopTime=127', 420"
+        res: 30
+      single_end_of_go_plus_1:
+        visible: true
+        args: "'speed=14&goTime=30&stopTime=127', 421"
+        res: 158 # goTime + stopTime + 1
+      4_random_close:
+        visible: true
+        args: |
+          `speed=14&goTime=30&stopTime=127
+          speed=13&goTime=29&stopTime=127
+          speed=1&goTime=10&stopTime=9
+          speed=5&goTime=2&stopTime=3`, 1500
+        res: 489
+        score: 2
+      30_random_varied:
+        args: |
+          `speed=1862&goTime=8039&stopTime=9950
+          speed=7683&goTime=2081&stopTime=4102
+          speed=9716&goTime=4001&stopTime=3274
+          speed=3060&goTime=6277&stopTime=3746
+          speed=3716&goTime=8957&stopTime=6862
+          speed=6640&goTime=5209&stopTime=6801
+          speed=9886&goTime=3857&stopTime=4818
+          speed=1882&goTime=2656&stopTime=3875
+          speed=4563&goTime=5285&stopTime=9807
+          speed=8022&goTime=8171&stopTime=9104
+          speed=9910&goTime=5138&stopTime=2252
+          speed=2534&goTime=917&stopTime=5706
+          speed=8204&goTime=8966&stopTime=7879
+          speed=5824&goTime=64&stopTime=2457
+          speed=5474&goTime=9227&stopTime=1244
+          speed=2894&goTime=776&stopTime=2205
+          speed=9045&goTime=1124&stopTime=7380
+          speed=1841&goTime=6832&stopTime=8247
+          speed=7712&goTime=6593&stopTime=8867
+          speed=3268&goTime=5667&stopTime=2900
+          speed=7831&goTime=4387&stopTime=3985
+          speed=843&goTime=7817&stopTime=1849
+          speed=7152&goTime=9659&stopTime=5755
+          speed=2321&goTime=4848&stopTime=9793
+          speed=8078&goTime=9531&stopTime=9040
+          speed=8198&goTime=7863&stopTime=2138
+          speed=4331&goTime=6834&stopTime=5645
+          speed=3947&goTime=1812&stopTime=8427
+          speed=7585&goTime=2816&stopTime=1259
+          speed=4879&goTime=5709&stopTime=2611`, 100000
+        res: 11
+        score: 2
+    edge_cases:
+      no_full_cycle:
+        args: "'speed=100&goTime=10&stopTime=127', 120"
+        res: 2
+      zero_distance:
+        args: "'speed=14&goTime=30&stopTime=127', 0"
+        res: 0
+      unordered_specs:
+        args: "'stopTime=127&speed=14&goTime=30', 420"
+        res: 30
+      zero_goTime:
+        args: "'speed=14&goTime=0&stopTime=127', 1"
+        res: -1
+      zero_goTime_zero_distance:
+        args: "'speed=14&goTime=0&stopTime=127', 0"
+        res: 0
+      zero_speed:
+        args: "'speed=0&goTime=30&stopTime=127', 1"
+        res: -1
+      zero_speed_zero_distance:
+        args: "'speed=0&goTime=30&stopTime=127', 0"
+        res: 0
+      zero_stopTime:
+        args: "'speed=4&goTime=20&stopTime=0', 400"
+        res: 100
+    performance:
+      single_long_distance:
+        args: "'speed=2&goTime=5&stopTime=10', 1_000_000_000"
+        res: 1499999990
+        score: 6
+        max_time_ms: 1 # 0.0019 on my machine, by doing maths

@@ -150,13 +150,13 @@ class Challenge {
                 prettyObject(testResult.error, '    ', true)}`);
             } else {
               console.log('    expected');
-              process.stdout.write(prettyObject(test.res, '      '));
+              process.stdout.write(chalk.green(prettyObject(test.res, '      ')));
               if (test.delta) {
                 process.stdout.write(` ± ${(test.delta/2)}`)
               }
               console.log('');
               console.log('    but got');
-              console.log(`      ${JSON.stringify(testResult.res)}`)
+              console.log(`      ${chalk.red(JSON.stringify(testResult.res))}`)
             }
           }
 
