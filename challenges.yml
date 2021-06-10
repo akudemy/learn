@@ -5,7 +5,7 @@
 #   tags?:
 #     - maths
 #     - data_structures
-#   difficulty?: trivial | easy | medium | hard | Industry_Standard | very_hard
+#   difficulty?: trivial | easy | medium | hard | Industry Standard | very hard
 #   template: |
 #     // description of problem
 #     function <fn_name>(arg1 /* type, properties */, arg2 ...) {
@@ -640,7 +640,7 @@ robot-race:
   tags:
     - maths
   difficulty: Industry Standard # a lot of edge cases, and a simple major optimization
-  recommended_time_ms: 1500e3 # 25min
+  recommended_time_ms: 1800e3 # 30 min
   fn_name: winnerDistance
   template: |
     // You are in charge of the schedule for a massive upcoming robot race.

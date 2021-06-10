@@ -333,6 +333,24 @@ function validateChallengeById(cid) {
     if (!challenge.tests) {
       error('no `tests`');
     }
+    if (challenge.difficulty) {
+      if (challenge.difficulty === 'Industry Standard' && challenge.recommended_time_ms !== 1800e3) {
+        warn(`Industry Standard challenge, but not to be solved in 1800e3 ms (30 min)?`)
+      }
+
+      const difficulties = [
+        'trivial',
+        'easy',
+        'medium',
+        'hard',
+        'Industry Standard',
+        'very hard',
+      ]
+      if (!difficulties.includes(challenge.difficulty)) {
+        warn(`difficulty "${challenge.difficulty}" not in the predefined list of possibilities (${difficulties.join(', ')})`);
+      }
+    }
+
     Object.keys(challenge).forEach((key) => {
       if (![
         'fn_name',
