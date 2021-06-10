@@ -5,7 +5,7 @@
 #   tags?:
 #     - maths
 #     - data_structures
-#   difficulty?: trivial | easy | medium | hard | Industry Standard | very hard
+#   difficulty?: trivial | easy | medium | hard | Industry Standard (supervised) | Industry Standard | very hard
 #   template: |
 #     // description of problem
 #     function <fn_name>(arg1 /* type, properties */, arg2 ...) {

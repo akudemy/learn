@@ -181,7 +181,11 @@ class Challenge {
     }
 
     this.testResults = results;
-    this.history.tests.push(results);
+    if (isSubmission) {
+      this.history.finalTest = results;
+    } else {
+      this.history.tests.push(results);
+    }
   }
 
   async submit() {
@@ -231,7 +235,6 @@ class Challenge {
     )}`));
 
     this.history.submissionTime = endTime;
-    this.history.finalTest = this.testResults;
     this.history.timePerc = timePerc;
     this.history.underTime = timePerc < 100;
   }
@@ -343,6 +346,7 @@ function validateChallengeById(cid) {
         'easy',
         'medium',
         'hard',
+        'Industry Standard (supervised)',
         'Industry Standard',
         'very hard',
       ]
