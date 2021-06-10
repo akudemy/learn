@@ -791,4 +791,599 @@ robot-race:
         args: "'speed=2&goTime=5&stopTime=10', 1_000_000_000"
         res: 1499999990
         score: 6
-        max_time_ms: 1 # 0.0019 on my machine, by doing maths
+        max_time_ms: 1 # 0.0019 on my machine, with sample_solution
+find-stolen-money:
+  source: modified https://adventofcode.com/2015/day/16/ part 2
+  difficulty: Industry Standard (supervised)
+  tags:
+    - data investigation
+    - supervised
+    - no random input
+    - interactive
+  recommended_time_ms: 900e3 # 15 min
+  fn_name: findHash
+  template: |
+    // Someone stole millions from a charity organization, but luckily you know quite a bit about their
+    // browser's footprint, that you can cross-reference with social media traffic to find the culprit.
+    //
+    // Less luckily, due to valid ethical and privacy concerns, nobody is willing to give you the entirety
+    // of their users' footprints, but they're happy to give you fragments associated with account hashes.
+    // If you identify the hash and give it to them, other entities can follow up while keeping the system
+    // mostly anonymous.
+    //
+    // Of the thief, you know:
+    //  - number of `cpu_cores`
+    //  - `ping` in ms (rounded down)
+    //  - `net_speed` in Gbps (rounded down)
+    //  - `login_duration` in minutes (rounded down)
+    //  - `last_login` in days
+    //  - `browser_version` number
+    //  - `window_height` in px
+    //  - `window_width` in px
+    //  - `kbd_layout` number that matches to an enum
+    //  - `battery_perc` percentage of battery left on device (rounded down)
+    //
+    // You will get it in the first argument as a string like so:
+    //  cpu_cores: 3
+    //  ping: 7
+    //  ...
+    // All the values are integers between 0 and 20, and the properties are only the ones described above.
+    //
+    // The data fragments are available through the second argument, in a newline-separated string like this:
+    //  account#af32b54 = ping: 2, cpu_cores: 8, last_login: 0
+    //  account#490b1bc = ping: 2, browser_version: 8, ping: 5
+    //  ...
+    // The property restrictions are the same as above. The account number is a hex string, and that's what you'll
+    // want to return.
+    //
+    // The theft happened through the social media site, and the data is from the same time as the theft,
+    // so all the details are going to match.
+
+    function findHash(details /* string, lines = 10 */, data /* string, lines = 500 */) {
+      // remember that you have access to the `console`, to inspect the data
+    }
+  sample_solution: |
+    function findHash(details, data) {
+      // using `\x20` instead of space otherwise highlighting the yml file messes up
+      const props = details.split('\n').map(l => l.split(':\x20'));
+      const accounts = data.split('\n').map((l) => {
+        const [account, props] = l.split(' =\x20');
+        const hash = account.split('#')[1];
+        return {
+          hash,
+          props: props.split(', ').map(p => p.split(':\x20')).reduce((acc, [k,v]) => ({[k]: v, ...acc}), {})
+        }
+      });
+
+      const thief = accounts.find((s) => {
+        for (const [k, v] of props) {
+          const sv = s.props[k];
+
+          if (sv === undefined) continue;
+          if (sv !== v) return false;
+        }
+        return true;
+      })
+
+      return thief.hash;
+    }
+  notes:
+    you can give the user the input in a file
+    the user should consider that there might be multiple matches and be a bit confused
+    the user should try to make sure there is only one entry
+  tests:
+    correctness:
+      main:
+        # ns=map.reduce((acc, [k, v]) => acc.replaceAll(k, v), s).split('\n').map(l => l.replaceAll(/Sue \d+/g, 'account#' + Array(7).fill().map(() => (Math.random()*16|0).toString(16)).join(''))).join('\n')
+        args: |
+          `cpu_cores: 3
+          ping: 7
+          net_speed: 2
+          login_duration: 3
+          last_login: 0
+          browser_version: 0
+          window_height: 5
+          window_width: 3
+          kbd_layout: 2
+          battery_perc: 1`,
+          `account#d9f3233 = kbd_layout: 9, last_login: 3, window_height: 0
+          account#4d006a4 = last_login: 9, cpu_cores: 3, net_speed: 9
+          account#b83f168 = window_width: 6, kbd_layout: 6, cpu_cores: 4
+          account#1ca6a4d = window_width: 4, browser_version: 4, window_height: 9
+          account#0616cb0 = last_login: 9, browser_version: 7, kbd_layout: 5
+          account#e70527e = browser_version: 6, window_height: 6, last_login: 3
+          account#0ac7d17 = login_duration: 5, net_speed: 0, battery_perc: 10
+          account#543e9d2 = kbd_layout: 10, login_duration: 7, window_height: 8
+          account#e26c23b = window_width: 2, browser_version: 7, net_speed: 6
+          account#c102267 = battery_perc: 5, login_duration: 4, cpu_cores: 9
+          account#c0b9681 = browser_version: 5, battery_perc: 8, kbd_layout: 10
+          account#f624b60 = cpu_cores: 10, kbd_layout: 6, battery_perc: 5
+          account#86ee0a9 = ping: 4, net_speed: 7, login_duration: 8
+          account#bfb86a6 = battery_perc: 6, window_height: 10, cpu_cores: 7
+          account#b105e7c = battery_perc: 4, login_duration: 3, kbd_layout: 6
+          account#67fff65 = battery_perc: 7, kbd_layout: 9, login_duration: 6
+          account#0d301e1 = window_height: 3, kbd_layout: 6, browser_version: 7
+          account#e0ca723 = battery_perc: 6, kbd_layout: 7, window_height: 3
+          account#93d4d6f = window_width: 0, last_login: 3, login_duration: 8
+          account#f44a73c = window_height: 6, window_width: 2, last_login: 6
+          account#93f233d = login_duration: 9, last_login: 9, net_speed: 9
+          account#e4bdfb7 = browser_version: 2, kbd_layout: 9, battery_perc: 5
+          account#40b4bda = window_height: 10, net_speed: 8, cpu_cores: 9
+          account#c2a6acb = last_login: 4, window_height: 1, browser_version: 5
+          account#1de8af8 = window_height: 10, window_width: 8, battery_perc: 6
+          account#a8b77d4 = browser_version: 5, last_login: 8, window_width: 1
+          account#abd10fd = window_width: 3, kbd_layout: 6, battery_perc: 2
+          account#9a88ad5 = window_height: 8, window_width: 7, last_login: 10
+          account#6ad45df = cpu_cores: 5, window_width: 1, window_height: 10
+          account#7386f0b = browser_version: 3, battery_perc: 8, last_login: 3
+          account#4380d16 = kbd_layout: 6, cpu_cores: 10, battery_perc: 7
+          account#af1aced = kbd_layout: 10, battery_perc: 3, window_height: 10
+          account#586bb30 = battery_perc: 9, browser_version: 3, last_login: 4
+          account#6dd0f20 = battery_perc: 10, browser_version: 7, cpu_cores: 8
+          account#015f620 = kbd_layout: 5, battery_perc: 5, browser_version: 9
+          account#5129999 = window_width: 9, kbd_layout: 9, last_login: 7
+          account#58e6d8e = net_speed: 9, battery_perc: 2, kbd_layout: 10
+          account#c88b279 = last_login: 7, kbd_layout: 5, window_width: 5
+          account#9cc0277 = window_height: 8, window_width: 9, kbd_layout: 10
+          account#2e65f4b = window_width: 0, ping: 1, login_duration: 1
+          account#bd020c1 = login_duration: 6, battery_perc: 9, net_speed: 1
+          account#ccbc2d7 = browser_version: 6, last_login: 3, login_duration: 1
+          account#f235be8 = browser_version: 2, battery_perc: 3, login_duration: 6
+          account#7044961 = last_login: 5, login_duration: 0, browser_version: 10
+          account#5c325eb = browser_version: 4, window_height: 1, kbd_layout: 5
+          account#db78d25 = kbd_layout: 4, browser_version: 8, ping: 0
+          account#9f9747a = ping: 5, cpu_cores: 8, login_duration: 2
+          account#9923e60 = browser_version: 3, battery_perc: 6, ping: 0
+          account#6c129db = last_login: 7, battery_perc: 0, window_width: 7
+          account#72a45d5 = window_width: 4, last_login: 10, browser_version: 2
+          account#c065b91 = window_height: 10, kbd_layout: 9, window_width: 4
+          account#5dc4f5f = kbd_layout: 5, cpu_cores: 9, battery_perc: 0
+          account#484542c = browser_version: 5, kbd_layout: 3, ping: 8
+          account#3311004 = kbd_layout: 5, last_login: 1, window_height: 10
+          account#7547930 = last_login: 10, browser_version: 2, kbd_layout: 6
+          account#3b7a6b4 = ping: 6, window_width: 0, kbd_layout: 4
+          account#2e65333 = browser_version: 1, last_login: 1, net_speed: 7
+          account#fbdda00 = net_speed: 6, browser_version: 1, last_login: 7
+          account#6f7fc12 = last_login: 9, kbd_layout: 8, browser_version: 1
+          account#dbc635b = kbd_layout: 6, browser_version: 7, window_height: 0
+          account#6e08479 = login_duration: 5, last_login: 6, browser_version: 2
+          account#f4641cc = net_speed: 2, ping: 8, window_height: 7
+          account#db13a43 = browser_version: 10, window_height: 7, net_speed: 9
+          account#fc6a7ce = battery_perc: 2, window_width: 1, last_login: 6
+          account#c500c85 = kbd_layout: 8, battery_perc: 10, browser_version: 9
+          account#4815fe9 = last_login: 8, browser_version: 8, battery_perc: 8
+          account#5405527 = window_height: 7, kbd_layout: 9, net_speed: 9
+          account#8e68cee = battery_perc: 2, cpu_cores: 7, last_login: 1
+          account#ae5404c = battery_perc: 7, browser_version: 9, last_login: 1
+          account#819fd11 = net_speed: 3, browser_version: 1, window_width: 1
+          account#d805633 = browser_version: 8, window_height: 7, window_width: 9
+          account#32898e9 = window_height: 8, kbd_layout: 6, window_width: 9
+          account#15848a9 = battery_perc: 5, kbd_layout: 10, net_speed: 7
+          account#5fb2dd8 = login_duration: 4, battery_perc: 3, kbd_layout: 5
+          account#c90bc68 = net_speed: 1, battery_perc: 1, login_duration: 1
+          account#842bb29 = window_height: 4, ping: 6, last_login: 7
+          account#8ef066d = battery_perc: 5, last_login: 4, browser_version: 8
+          account#3aac01c = battery_perc: 4, ping: 3, cpu_cores: 4
+          account#ef4c494 = browser_version: 5, login_duration: 9, net_speed: 7
+          account#0c3e7c3 = kbd_layout: 3, net_speed: 5, login_duration: 7
+          account#916ba7c = browser_version: 2, net_speed: 4, battery_perc: 2
+          account#946b488 = window_width: 1, last_login: 10, browser_version: 9
+          account#e5e4f45 = browser_version: 0, last_login: 2, net_speed: 5
+          account#918db8c = battery_perc: 5, browser_version: 7, cpu_cores: 8
+          account#6c1946d = ping: 3, cpu_cores: 2, window_width: 0
+          account#f94d604 = kbd_layout: 3, battery_perc: 2, window_height: 2
+          account#54fa7d7 = window_width: 1, last_login: 7, browser_version: 0
+          account#c925ed7 = window_width: 1, last_login: 2, net_speed: 1
+          account#defde40 = kbd_layout: 4, browser_version: 8, last_login: 1
+          account#7f74a67 = battery_perc: 5, ping: 3, browser_version: 0
+          account#aeb095f = net_speed: 7, ping: 6, window_height: 8
+          account#3bd42bf = net_speed: 10, ping: 0, kbd_layout: 7
+          account#4901780 = kbd_layout: 6, last_login: 7, net_speed: 2
+          account#738c53a = battery_perc: 0, window_height: 6, window_width: 9
+          account#769294f = kbd_layout: 6, login_duration: 2, net_speed: 8
+          account#1a6fc56 = kbd_layout: 2, window_width: 9, net_speed: 4
+          account#488e3d0 = window_height: 5, window_width: 1, cpu_cores: 0
+          account#c0b19f3 = last_login: 9, window_height: 7, cpu_cores: 6
+          account#a54cfae = window_height: 9, last_login: 0, login_duration: 0
+          account#08c03ef = net_speed: 6, cpu_cores: 8, browser_version: 5
+          account#bbd3504 = browser_version: 6, kbd_layout: 5, window_height: 4
+          account#6b9ea43 = browser_version: 6, last_login: 2, battery_perc: 6
+          account#7c860ba = net_speed: 3, last_login: 7, cpu_cores: 4
+          account#9abe8e6 = kbd_layout: 3, battery_perc: 10, ping: 6
+          account#6b97e2b = browser_version: 9, login_duration: 0, kbd_layout: 1
+          account#ac64cc9 = ping: 6, net_speed: 8, login_duration: 5
+          account#f20a8f6 = kbd_layout: 7, window_width: 4, last_login: 10
+          account#a392a4a = battery_perc: 3, browser_version: 1, window_height: 9
+          account#c0d3d73 = window_width: 6, kbd_layout: 8, window_height: 5
+          account#5c3b6e7 = login_duration: 2, cpu_cores: 1, browser_version: 7
+          account#18a55b8 = last_login: 0, browser_version: 8, kbd_layout: 0
+          account#da3ca88 = window_height: 3, browser_version: 6, last_login: 2
+          account#fe7d325 = last_login: 10, login_duration: 7, battery_perc: 7
+          account#c8cb497 = kbd_layout: 10, ping: 2, browser_version: 8
+          account#0d41344 = last_login: 8, window_width: 1, browser_version: 2
+          account#a14033a = browser_version: 2, last_login: 7, battery_perc: 1
+          account#0b47b5f = window_height: 0, browser_version: 10, window_width: 9
+          account#a0127b6 = window_width: 3, kbd_layout: 0, window_height: 0
+          account#a14f104 = battery_perc: 7, window_height: 5, window_width: 9
+          account#f628766 = cpu_cores: 9, browser_version: 3, window_width: 5
+          account#34b36c6 = browser_version: 1, window_height: 7, last_login: 10
+          account#8659032 = battery_perc: 1, kbd_layout: 6, window_width: 1
+          account#f983f27 = last_login: 2, browser_version: 0, window_height: 7
+          account#68f8560 = browser_version: 10, login_duration: 7, last_login: 0
+          account#0a3ca3c = battery_perc: 4, ping: 5, browser_version: 2
+          account#4f4a82b = kbd_layout: 6, net_speed: 8, last_login: 3
+          account#162d6d6 = window_width: 9, window_height: 7, last_login: 9
+          account#0870bc3 = kbd_layout: 8, window_width: 0, battery_perc: 2
+          account#d93eaf0 = login_duration: 7, browser_version: 2, battery_perc: 6
+          account#e328140 = browser_version: 9, login_duration: 3, window_width: 6
+          account#96571d4 = browser_version: 7, kbd_layout: 9, battery_perc: 1
+          account#b6a555a = last_login: 2, login_duration: 9, browser_version: 7
+          account#4a91929 = window_width: 9, login_duration: 10, net_speed: 0
+          account#296c9cc = cpu_cores: 4, last_login: 10, battery_perc: 4
+          account#4d2167e = browser_version: 1, ping: 1, window_width: 8
+          account#b21625d = net_speed: 7, kbd_layout: 8, window_height: 5
+          account#bc63d5c = battery_perc: 0, cpu_cores: 1, login_duration: 10
+          account#ba118a6 = browser_version: 4, battery_perc: 5, kbd_layout: 5
+          account#ee274f2 = window_width: 2, battery_perc: 8, window_height: 0
+          account#a094e9a = kbd_layout: 10, last_login: 5, window_height: 7
+          account#b15a97c = cpu_cores: 4, window_width: 3, window_height: 8
+          account#d2bf7ad = kbd_layout: 8, battery_perc: 6, window_width: 7
+          account#0614a7b = last_login: 6, window_height: 0, window_width: 10
+          account#5c2f20e = last_login: 7, login_duration: 10, battery_perc: 10
+          account#02c6993 = window_width: 10, browser_version: 3, window_height: 4
+          account#88b960d = net_speed: 4, last_login: 3, battery_perc: 6
+          account#8e4a46e = last_login: 8, battery_perc: 2, login_duration: 10
+          account#c5a47cd = kbd_layout: 2, battery_perc: 0, window_height: 8
+          account#37dce67 = window_height: 6, last_login: 7, battery_perc: 6
+          account#a356599 = kbd_layout: 2, login_duration: 5, battery_perc: 4
+          account#0444484 = window_height: 1, kbd_layout: 5, window_width: 0
+          account#ea378e4 = login_duration: 4, kbd_layout: 7, cpu_cores: 1
+          account#44ea9ea = window_height: 8, kbd_layout: 1, cpu_cores: 10
+          account#686425d = kbd_layout: 6, battery_perc: 8, window_width: 1
+          account#87008a3 = last_login: 4, battery_perc: 6, login_duration: 2
+          account#696d778 = login_duration: 5, kbd_layout: 4, last_login: 1
+          account#522a96b = ping: 5, kbd_layout: 9, window_height: 8
+          account#27ef353 = browser_version: 5, net_speed: 1, cpu_cores: 7
+          account#27096e4 = browser_version: 1, battery_perc: 3, last_login: 1
+          account#3f0317a = window_height: 10, login_duration: 9, battery_perc: 5
+          account#b8cb24f = net_speed: 3, window_width: 7, kbd_layout: 2
+          account#6d04a41 = kbd_layout: 2, login_duration: 1, browser_version: 6
+          account#30e4b1b = browser_version: 3, battery_perc: 5, last_login: 6
+          account#34df70c = browser_version: 1, window_width: 0, last_login: 5
+          account#9aff322 = browser_version: 5, kbd_layout: 6, login_duration: 8
+          account#4ea7050 = kbd_layout: 10, battery_perc: 2, window_width: 9
+          account#4f43edc = kbd_layout: 10, login_duration: 6, battery_perc: 4
+          account#ad332c4 = last_login: 7, window_width: 10, window_height: 7
+          account#9aee1e6 = last_login: 1, battery_perc: 10, kbd_layout: 10
+          account#3649c5a = last_login: 5, net_speed: 8, browser_version: 6
+          account#cb392c3 = cpu_cores: 3, last_login: 2, browser_version: 3
+          account#15330e7 = window_height: 5, browser_version: 5, battery_perc: 9
+          account#0cc3ac1 = battery_perc: 5, window_height: 10, window_width: 5
+          account#7ee4b05 = last_login: 5, browser_version: 2, cpu_cores: 7
+          account#83c24d3 = battery_perc: 5, kbd_layout: 7, net_speed: 2
+          account#b758a60 = kbd_layout: 8, browser_version: 10, last_login: 7
+          account#796e4f3 = battery_perc: 7, cpu_cores: 8, window_height: 7
+          account#3ed2100 = kbd_layout: 1, login_duration: 9, net_speed: 0
+          account#3243454 = battery_perc: 6, kbd_layout: 2, window_width: 6
+          account#b618141 = window_width: 3, browser_version: 7, cpu_cores: 3
+          account#5e863ce = browser_version: 8, net_speed: 2, window_width: 9
+          account#1d4f1d2 = battery_perc: 3, ping: 1, cpu_cores: 5
+          account#f93d0e7 = last_login: 9, ping: 6, cpu_cores: 3
+          account#30b4fd6 = login_duration: 9, kbd_layout: 6, battery_perc: 8
+          account#31a0d7c = browser_version: 9, window_width: 0, last_login: 9
+          account#ca6f9c8 = battery_perc: 6, kbd_layout: 5, window_height: 5
+          account#4a55f2a = battery_perc: 4, ping: 7, browser_version: 2
+          account#04f2240 = last_login: 7, kbd_layout: 4, cpu_cores: 10
+          account#0e43e4f = last_login: 0, window_height: 7, browser_version: 5
+          account#365be19 = last_login: 5, kbd_layout: 5, ping: 6
+          account#9e72b2e = kbd_layout: 6, cpu_cores: 0, battery_perc: 3
+          account#4274fbb = ping: 2, battery_perc: 10, window_height: 7
+          account#d9dd829 = window_width: 1, battery_perc: 0, kbd_layout: 8
+          account#6d67add = battery_perc: 9, cpu_cores: 4, ping: 6
+          account#1d3b407 = last_login: 7, window_width: 3, window_height: 6
+          account#36b2d42 = window_height: 8, kbd_layout: 8, net_speed: 0
+          account#a991803 = ping: 0, last_login: 10, browser_version: 0
+          account#cbfaca9 = window_height: 1, battery_perc: 3, kbd_layout: 8
+          account#8c01ade = last_login: 10, browser_version: 5, net_speed: 6
+          account#b8c5237 = login_duration: 9, window_height: 9, net_speed: 7
+          account#eb29645 = net_speed: 0, window_height: 7, last_login: 6
+          account#0ba8d85 = browser_version: 0, window_height: 2, last_login: 1
+          account#071a691 = window_height: 3, cpu_cores: 0, browser_version: 8
+          account#74b190f = kbd_layout: 8, window_width: 2, battery_perc: 2
+          account#79e6188 = kbd_layout: 4, battery_perc: 5, window_height: 8
+          account#ac8b4ea = browser_version: 3, window_width: 2, last_login: 1
+          account#2ac270f = kbd_layout: 7, window_height: 5, window_width: 1
+          account#c413222 = window_height: 1, kbd_layout: 6, browser_version: 8
+          account#5614b29 = ping: 4, window_width: 1, cpu_cores: 0
+          account#35755fa = ping: 10, cpu_cores: 0, battery_perc: 0
+          account#025b30a = kbd_layout: 4, login_duration: 7, net_speed: 5
+          account#f1e7a3d = kbd_layout: 2, login_duration: 10, window_width: 1
+          account#523b464 = window_width: 10, ping: 5, kbd_layout: 10
+          account#cda4d9b = battery_perc: 5, window_width: 1, browser_version: 1
+          account#e314adc = last_login: 10, browser_version: 8, net_speed: 8
+          account#2866f55 = browser_version: 2, ping: 5, login_duration: 3
+          account#005f915 = last_login: 10, battery_perc: 0, ping: 10
+          account#db05e0b = window_width: 8, ping: 5, browser_version: 2
+          account#c98231f = window_height: 10, battery_perc: 8, cpu_cores: 2
+          account#2b9b471 = net_speed: 9, window_width: 8, browser_version: 7
+          account#73d370a = cpu_cores: 7, window_width: 6, kbd_layout: 6
+          account#e41a73c = ping: 4, last_login: 5, login_duration: 0
+          account#f42a3cb = window_width: 8, window_height: 2, battery_perc: 8
+          account#83402ca = login_duration: 9, kbd_layout: 8, last_login: 5
+          account#0498149 = last_login: 10, browser_version: 0, window_width: 2
+          account#0a023e7 = last_login: 8, ping: 6, kbd_layout: 7
+          account#17fc957 = window_width: 1, last_login: 3, window_height: 4
+          account#73995f1 = login_duration: 6, ping: 3, window_height: 3
+          account#00c8eac = window_width: 10, battery_perc: 3, browser_version: 7
+          account#3179b37 = battery_perc: 8, kbd_layout: 7, last_login: 0
+          account#e168fdd = battery_perc: 10, window_height: 4, kbd_layout: 6
+          account#39987b7 = window_height: 7, window_width: 3, ping: 2
+          account#e2fe49d = battery_perc: 6, window_width: 4, last_login: 4
+          account#c12164a = window_height: 9, ping: 4, kbd_layout: 7
+          account#20a6c1e = login_duration: 6, browser_version: 0, last_login: 6
+          account#4cafd01 = net_speed: 5, kbd_layout: 5, cpu_cores: 4
+          account#1eb0637 = browser_version: 10, kbd_layout: 4, window_height: 4
+          account#e0f6cb9 = window_height: 3, net_speed: 7, last_login: 2
+          account#40ddde1 = ping: 8, cpu_cores: 2, browser_version: 7
+          account#6dff285 = kbd_layout: 9, battery_perc: 4, window_width: 9
+          account#2bc66b5 = window_width: 8, browser_version: 2, window_height: 5
+          account#e8c9d49 = kbd_layout: 6, window_width: 3, browser_version: 3
+          account#6d434c0 = ping: 6, cpu_cores: 7, kbd_layout: 4
+          account#608ad2d = ping: 10, battery_perc: 2, window_height: 7
+          account#bfbade1 = last_login: 8, ping: 10, battery_perc: 8
+          account#25051d0 = browser_version: 8, last_login: 5, battery_perc: 10
+          account#bd6cf15 = window_height: 2, browser_version: 5, last_login: 7
+          account#01de911 = last_login: 3, battery_perc: 0, window_width: 10
+          account#bab2e97 = ping: 4, browser_version: 5, login_duration: 6
+          account#47c5cb7 = cpu_cores: 3, browser_version: 7, battery_perc: 2
+          account#96bc409 = kbd_layout: 0, login_duration: 10, battery_perc: 0
+          account#b181903 = last_login: 0, window_height: 9, kbd_layout: 6
+          account#ee1ac2b = battery_perc: 7, kbd_layout: 4, net_speed: 5
+          account#eacb74e = last_login: 9, window_width: 10, kbd_layout: 4
+          account#0fc23b1 = net_speed: 10, cpu_cores: 6, last_login: 7
+          account#228d791 = window_width: 8, window_height: 8, battery_perc: 8
+          account#6c5a100 = window_height: 3, last_login: 2, battery_perc: 6
+          account#c609efd = ping: 7, window_width: 0, browser_version: 1
+          account#eb781ab = battery_perc: 7, kbd_layout: 7, last_login: 7
+          account#9769803 = window_height: 0, browser_version: 0, net_speed: 2
+          account#ae6495c = browser_version: 2, cpu_cores: 2, ping: 3
+          account#1531263 = browser_version: 2, login_duration: 9, net_speed: 3
+          account#017c764 = ping: 1, last_login: 3, browser_version: 1
+          account#8e3463b = login_duration: 10, window_width: 2, window_height: 7
+          account#e8c11b6 = net_speed: 5, window_width: 7, battery_perc: 4
+          account#f17fc26 = battery_perc: 10, kbd_layout: 1, login_duration: 3
+          account#dff4df6 = window_width: 6, window_height: 1, kbd_layout: 0
+          account#cd56773 = kbd_layout: 6, net_speed: 4, login_duration: 5
+          account#ab66f1f = window_height: 3, browser_version: 3, last_login: 3
+          account#8938842 = cpu_cores: 5, ping: 0, kbd_layout: 4
+          account#3533a15 = window_height: 3, battery_perc: 8, login_duration: 7
+          account#5551227 = net_speed: 6, kbd_layout: 7, battery_perc: 10
+          account#24e5664 = window_width: 4, kbd_layout: 2, browser_version: 7
+          account#647cbc9 = net_speed: 10, battery_perc: 9, window_height: 6
+          account#7f78ef3 = kbd_layout: 4, window_width: 2, battery_perc: 7
+          account#845157f = last_login: 3, battery_perc: 9, kbd_layout: 9
+          account#9fd6b6f = last_login: 8, browser_version: 2, ping: 6
+          account#6a54ba8 = window_width: 5, window_height: 7, last_login: 3
+          account#a7e8e40 = battery_perc: 9, kbd_layout: 8, browser_version: 2
+          account#81f7a35 = window_width: 3, browser_version: 0, cpu_cores: 0
+          account#ce370aa = kbd_layout: 7, window_width: 2, ping: 5
+          account#37d0d3f = browser_version: 4, kbd_layout: 10, ping: 3
+          account#56bdd69 = last_login: 10, ping: 3, net_speed: 9
+          account#32cf6e8 = window_width: 7, cpu_cores: 5, window_height: 6
+          account#6fe0b4a = kbd_layout: 2, battery_perc: 5, ping: 7
+          account#7f2d3f3 = net_speed: 5, window_width: 10, window_height: 6
+          account#7719ee0 = window_height: 10, battery_perc: 4, window_width: 7
+          account#a3fb206 = browser_version: 9, window_width: 9, battery_perc: 0
+          account#c36fcbb = window_width: 4, window_height: 9, browser_version: 8
+          account#00e2e97 = browser_version: 3, kbd_layout: 3, window_width: 2
+          account#3f038df = window_height: 2, last_login: 2, window_width: 2
+          account#e5b9339 = cpu_cores: 1, kbd_layout: 0, browser_version: 5
+          account#6f06473 = window_width: 5, last_login: 4, window_height: 6
+          account#cfe552e = last_login: 3, browser_version: 7, login_duration: 5
+          account#e75eeb0 = window_height: 10, browser_version: 3, window_width: 1
+          account#769b52a = kbd_layout: 2, window_width: 1, last_login: 0
+          account#1a75923 = last_login: 10, browser_version: 6, net_speed: 2
+          account#061fcdc = cpu_cores: 5, window_width: 1, net_speed: 9
+          account#f4d126b = battery_perc: 9, window_width: 6, browser_version: 1
+          account#80eb299 = last_login: 7, login_duration: 6, browser_version: 6
+          account#c7c5f23 = ping: 7, cpu_cores: 6, browser_version: 7
+          account#4d861e9 = window_width: 2, browser_version: 7, net_speed: 4
+          account#55f4656 = window_height: 0, net_speed: 10, kbd_layout: 4
+          account#c32fc19 = login_duration: 9, cpu_cores: 3, browser_version: 5
+          account#5e58de8 = last_login: 8, browser_version: 4, kbd_layout: 5
+          account#5bc7a69 = last_login: 0, battery_perc: 2, login_duration: 10
+          account#0073af6 = last_login: 9, kbd_layout: 0, window_width: 2
+          account#cd4dad3 = browser_version: 10, window_height: 8, last_login: 6
+          account#4952474 = window_width: 0, ping: 6, battery_perc: 2
+          account#0435208 = browser_version: 10, kbd_layout: 1, window_width: 4
+          account#24e4c0b = window_height: 8, battery_perc: 6, ping: 3
+          account#a11cd74 = window_height: 0, cpu_cores: 1, last_login: 2
+          account#0a45dd1 = login_duration: 10, window_width: 6, net_speed: 6
+          account#ff5997e = browser_version: 5, last_login: 4, login_duration: 2
+          account#d2228a9 = window_height: 7, window_width: 0, last_login: 5
+          account#b860985 = window_height: 4, browser_version: 5, kbd_layout: 7
+          account#3c1efb2 = battery_perc: 7, ping: 10, kbd_layout: 4
+          account#f65245d = net_speed: 10, kbd_layout: 9, window_width: 7
+          account#8f8464f = login_duration: 8, browser_version: 6, kbd_layout: 3
+          account#61746d6 = kbd_layout: 4, ping: 9, last_login: 4
+          account#3bb421f = kbd_layout: 6, window_width: 2, battery_perc: 6
+          account#5ba04b1 = window_height: 1, ping: 2, battery_perc: 4
+          account#0a35591 = last_login: 6, ping: 5, kbd_layout: 8
+          account#8c97f1d = ping: 4, browser_version: 9, last_login: 0
+          account#f167138 = cpu_cores: 8, net_speed: 9, window_width: 4
+          account#8fe4692 = browser_version: 2, net_speed: 10, battery_perc: 7
+          account#14a7dc2 = window_height: 7, login_duration: 4, last_login: 10
+          account#e4fa757 = battery_perc: 8, ping: 4, last_login: 10
+          account#ae6ddb6 = window_width: 0, kbd_layout: 9, window_height: 3
+          account#2adb715 = window_width: 5, net_speed: 7, battery_perc: 8
+          account#307575a = kbd_layout: 4, battery_perc: 2, window_height: 0
+          account#3484850 = browser_version: 4, login_duration: 7, last_login: 1
+          account#b46ac59 = last_login: 4, window_height: 3, battery_perc: 0
+          account#f807a66 = net_speed: 3, last_login: 10, browser_version: 0
+          account#6316884 = window_height: 1, last_login: 7, browser_version: 6
+          account#a87a121 = battery_perc: 1, window_height: 1, login_duration: 8
+          account#a57bc7e = cpu_cores: 5, kbd_layout: 4, ping: 4
+          account#f72b1cb = browser_version: 5, kbd_layout: 10, ping: 3
+          account#c9c6e20 = window_width: 2, window_height: 3, kbd_layout: 1
+          account#4967c6a = window_width: 10, window_height: 6, battery_perc: 2
+          account#bb97af3 = last_login: 5, window_width: 6, ping: 3
+          account#0e2fcb0 = kbd_layout: 10, cpu_cores: 8, window_height: 0
+          account#4b829cf = ping: 2, last_login: 0, login_duration: 4
+          account#beb0a32 = battery_perc: 1, browser_version: 3, kbd_layout: 3
+          account#9fea577 = net_speed: 8, ping: 5, battery_perc: 8
+          account#ea6f399 = kbd_layout: 5, last_login: 10, window_width: 2
+          account#eab7ceb = browser_version: 9, last_login: 9, kbd_layout: 3
+          account#4b61b8d = kbd_layout: 3, battery_perc: 1, login_duration: 9
+          account#247df2e = last_login: 1, kbd_layout: 4, battery_perc: 0
+          account#2eb1c2b = battery_perc: 8, browser_version: 2, window_width: 6
+          account#92e2fda = login_duration: 5, last_login: 9, ping: 8
+          account#84b1b4a = login_duration: 8, browser_version: 3, window_height: 10
+          account#77f6253 = window_width: 2, login_duration: 0, window_height: 6
+          account#6670d4f = ping: 5, last_login: 7, window_height: 6
+          account#98ae888 = window_height: 6, cpu_cores: 4, window_width: 10
+          account#0bdb497 = cpu_cores: 1, window_width: 3, last_login: 7
+          account#0ca3257 = window_width: 2, net_speed: 10, window_height: 3
+          account#7df2b0f = net_speed: 10, ping: 0, window_height: 0
+          account#e8eca32 = battery_perc: 3, cpu_cores: 6, login_duration: 1
+          account#7f1e835 = kbd_layout: 10, login_duration: 1, net_speed: 5
+          account#a95465b = net_speed: 9, login_duration: 7, battery_perc: 6
+          account#b0c4dd2 = window_height: 6, window_width: 8, battery_perc: 9
+          account#d653018 = net_speed: 10, login_duration: 9, cpu_cores: 10
+          account#49a754c = battery_perc: 3, window_height: 7, kbd_layout: 9
+          account#e03f37a = ping: 3, cpu_cores: 4, net_speed: 8
+          account#f50a764 = window_width: 0, kbd_layout: 10, browser_version: 10
+          account#d370d47 = login_duration: 10, cpu_cores: 8, battery_perc: 2
+          account#d5e2165 = kbd_layout: 5, browser_version: 0, net_speed: 3
+          account#7538584 = window_width: 1, window_height: 8, kbd_layout: 8
+          account#f549b40 = browser_version: 0, kbd_layout: 2, battery_perc: 5
+          account#b2ba1b1 = window_width: 2, kbd_layout: 3, browser_version: 8
+          account#81e4319 = window_width: 10, cpu_cores: 9, ping: 1
+          account#badcafe = login_duration: 3, battery_perc: 1, browser_version: 0
+          account#8005a82 = browser_version: 0, battery_perc: 6, window_width: 0
+          account#0e565a3 = browser_version: 7, login_duration: 1, last_login: 10
+          account#a4b2b7e = browser_version: 8, window_width: 2, kbd_layout: 10
+          account#fc1becf = battery_perc: 9, ping: 5, window_height: 5
+          account#4ea457e = ping: 0, last_login: 10, battery_perc: 9
+          account#f92b575 = kbd_layout: 4, last_login: 1, window_width: 1
+          account#7d2fb67 = kbd_layout: 4, battery_perc: 5, window_width: 3
+          account#5f84c72 = window_height: 3, last_login: 5, net_speed: 9
+          account#9dfd8c6 = window_height: 7, battery_perc: 5, window_width: 5
+          account#eac2272 = last_login: 4, ping: 6, kbd_layout: 8
+          account#a0279f5 = cpu_cores: 6, window_height: 10, last_login: 7
+          account#d637ee6 = last_login: 7, browser_version: 5, battery_perc: 10
+          account#9654b5b = cpu_cores: 7, browser_version: 10, last_login: 10
+          account#6d2e42d = window_height: 6, last_login: 7, window_width: 2
+          account#6919f05 = browser_version: 6, window_width: 1, last_login: 2
+          account#8eda25b = kbd_layout: 5, browser_version: 3, last_login: 7
+          account#89ab7bd = browser_version: 4, ping: 8, battery_perc: 7
+          account#9e1eac3 = last_login: 3, window_width: 0, cpu_cores: 2
+          account#d522980 = ping: 7, kbd_layout: 3, cpu_cores: 9
+          account#8e1f793 = window_width: 10, browser_version: 3, window_height: 7
+          account#9d62b3f = battery_perc: 0, window_height: 7, last_login: 4
+          account#f57e256 = ping: 6, kbd_layout: 7, browser_version: 0
+          account#d9a413c = browser_version: 4, battery_perc: 6, window_height: 5
+          account#370e3df = login_duration: 8, window_width: 1, last_login: 9
+          account#64508c1 = window_height: 7, login_duration: 6, net_speed: 9
+          account#2304778 = battery_perc: 10, kbd_layout: 1, window_width: 8
+          account#9f3e5ff = window_width: 0, window_height: 9, cpu_cores: 6
+          account#6db4585 = window_width: 1, kbd_layout: 6, login_duration: 8
+          account#497f12c = battery_perc: 9, kbd_layout: 0, browser_version: 10
+          account#96790ea = net_speed: 4, last_login: 1, browser_version: 9
+          account#5a1a1b3 = battery_perc: 0, window_width: 2, kbd_layout: 4
+          account#0a3dd20 = last_login: 0, battery_perc: 5, net_speed: 4
+          account#f59686f = last_login: 8, browser_version: 6, cpu_cores: 2
+          account#1d25d9d = cpu_cores: 1, window_width: 8, window_height: 10
+          account#2b8a9b3 = login_duration: 4, window_width: 10, kbd_layout: 9
+          account#ef826d4 = battery_perc: 5, browser_version: 5, last_login: 4
+          account#619af29 = window_width: 1, last_login: 10, browser_version: 6
+          account#549805e = net_speed: 0, window_height: 9, battery_perc: 7
+          account#ee5139a = window_height: 7, net_speed: 10, window_width: 1
+          account#3ca2d9c = net_speed: 0, login_duration: 10, browser_version: 6
+          account#243dda5 = cpu_cores: 2, kbd_layout: 10, net_speed: 2
+          account#7556bd6 = window_width: 2, window_height: 8, kbd_layout: 0
+          account#6c2ae2a = net_speed: 4, window_height: 9, window_width: 2
+          account#ceba12e = window_width: 8, last_login: 10, battery_perc: 3
+          account#e32d555 = net_speed: 9, window_height: 2, kbd_layout: 1
+          account#80f1383 = last_login: 2, battery_perc: 8, window_width: 2
+          account#54d5d6f = cpu_cores: 3, window_height: 6, battery_perc: 5
+          account#1f26de1 = last_login: 8, battery_perc: 2, net_speed: 6
+          account#61c8b59 = browser_version: 10, last_login: 4, login_duration: 3
+          account#59b6569 = ping: 8, battery_perc: 3, window_width: 4
+          account#08e1f41 = kbd_layout: 2, cpu_cores: 4, login_duration: 8
+          account#99959af = login_duration: 4, net_speed: 2, window_height: 4
+          account#210016e = battery_perc: 6, kbd_layout: 4, window_height: 4
+          account#3aa5a70 = last_login: 0, window_height: 7, battery_perc: 5
+          account#ed4dfe8 = battery_perc: 4, kbd_layout: 3, last_login: 5
+          account#8dac21b = window_width: 0, browser_version: 0, window_height: 1
+          account#c00fcad = battery_perc: 4, browser_version: 2, kbd_layout: 7
+          account#6f07022 = window_height: 7, login_duration: 8, window_width: 0
+          account#1db37a1 = window_height: 7, cpu_cores: 9, window_width: 3
+          account#aa78f09 = last_login: 1, browser_version: 10, window_width: 2
+          account#dc49084 = battery_perc: 2, kbd_layout: 4, window_height: 10
+          account#59e2d63 = login_duration: 6, browser_version: 9, window_width: 1
+          account#cf06c19 = kbd_layout: 9, window_width: 0, window_height: 0
+          account#9213ee4 = window_width: 1, window_height: 1, browser_version: 8
+          account#80eff04 = window_height: 7, net_speed: 8, cpu_cores: 2
+          account#424a48d = cpu_cores: 1, ping: 7, browser_version: 8
+          account#0c8ef6f = ping: 2, login_duration: 6, window_height: 4
+          account#20402a8 = battery_perc: 7, ping: 3, browser_version: 6
+          account#70ef727 = last_login: 4, net_speed: 5, kbd_layout: 2
+          account#5096921 = last_login: 3, battery_perc: 3, ping: 9
+          account#8e87fb7 = battery_perc: 10, last_login: 6, window_width: 0
+          account#442f0b5 = kbd_layout: 5, cpu_cores: 9, battery_perc: 8
+          account#41d6b80 = browser_version: 10, kbd_layout: 3, battery_perc: 5
+          account#2d5949e = cpu_cores: 9, battery_perc: 1, kbd_layout: 10
+          account#5e4e7ad = last_login: 0, window_height: 8, window_width: 3
+          account#4850e10 = kbd_layout: 7, last_login: 8, cpu_cores: 3
+          account#b346e0c = kbd_layout: 4, last_login: 9, ping: 0
+          account#6a9e21b = battery_perc: 4, net_speed: 5, window_height: 6
+          account#3f7bdc6 = battery_perc: 10, last_login: 1, kbd_layout: 7
+          account#12b9228 = window_width: 1, window_height: 3, browser_version: 6
+          account#4a5c884 = window_height: 8, login_duration: 6, window_width: 10
+          account#6a9b1cd = last_login: 5, browser_version: 8, window_height: 10
+          account#0b1a65c = ping: 5, window_width: 4, net_speed: 0
+          account#0ebc1ea = battery_perc: 8, kbd_layout: 0, ping: 3
+          account#30ea5d2 = last_login: 1, window_width: 10, browser_version: 2
+          account#9560d9c = browser_version: 6, last_login: 3, cpu_cores: 10
+          account#a45ac7f = battery_perc: 7, window_width: 9, window_height: 8
+          account#43036c4 = cpu_cores: 6, browser_version: 4, battery_perc: 5
+          account#a061d22 = browser_version: 6, last_login: 8, battery_perc: 9
+          account#31d2851 = window_height: 8, kbd_layout: 4, window_width: 10
+          account#7a441fe = login_duration: 8, kbd_layout: 5, browser_version: 0
+          account#080d778 = ping: 10, window_height: 7, last_login: 1
+          account#9b88f1f = ping: 2, cpu_cores: 1, kbd_layout: 6
+          account#4142b20 = battery_perc: 3, net_speed: 6, kbd_layout: 0
+          account#876a520 = net_speed: 10, login_duration: 6, window_width: 2
+          account#75756b3 = cpu_cores: 2, battery_perc: 2, login_duration: 4
+          account#a883404 = ping: 1, battery_perc: 5, browser_version: 9
+          account#76841c0 = browser_version: 5, battery_perc: 2, last_login: 7
+          account#0dd5b6f = net_speed: 8, window_height: 6, ping: 1
+          account#c22d12d = window_height: 10, battery_perc: 9, kbd_layout: 4
+          account#01d0a15 = net_speed: 0, kbd_layout: 4, browser_version: 4
+          account#dc2ee25 = window_width: 2, kbd_layout: 7, last_login: 8
+          account#99ababd = browser_version: 3, battery_perc: 5, window_height: 1
+          account#ea0e320 = ping: 7, kbd_layout: 4, window_width: 1
+          account#742fa3b = browser_version: 8, last_login: 3, window_height: 0
+          account#76c7da1 = kbd_layout: 6, ping: 3, battery_perc: 2
+          account#8a5f81e = window_height: 1, cpu_cores: 9, browser_version: 3
+          account#b4d094b = login_duration: 5, browser_version: 1, kbd_layout: 10
+          account#022678a = cpu_cores: 5, battery_perc: 5, ping: 1
+          account#126c1e0 = battery_perc: 2, window_height: 7, window_width: 6
+          account#2c21c4f = last_login: 2, window_height: 4, battery_perc: 10
+          account#d898268 = net_speed: 3, window_height: 0, last_login: 1
+          account#fa2dbab = window_width: 8, browser_version: 9, window_height: 0
+          account#a9b1ff3 = window_height: 8, net_speed: 0, window_width: 0
+          account#dc10f8a = battery_perc: 7, kbd_layout: 5, window_width: 0
+          account#561f2f3 = browser_version: 3, login_duration: 2, battery_perc: 5
+          account#ccc2435 = kbd_layout: 5, battery_perc: 5, last_login: 5
+          account#a4d0757 = cpu_cores: 8, window_width: 1, login_duration: 4
+          account#af24400 = login_duration: 0, last_login: 1, browser_version: 8
+          account#009eb17 = last_login: 10, battery_perc: 10, net_speed: 8
+          account#b49bfe6 = battery_perc: 6, browser_version: 4, ping: 6
+          account#5d36f86 = cpu_cores: 6, login_duration: 5, net_speed: 4
+          account#bca1c3a = browser_version: 1, window_width: 5, last_login: 1
+          account#ff422ee = browser_version: 10, battery_perc: 10, login_duration: 3
+          account#e048ae6 = net_speed: 3, window_width: 2, kbd_layout: 5
+          account#e07baa3 = ping: 6, cpu_cores: 3, battery_perc: 0
+          account#ef41b63 = login_duration: 10, ping: 3, browser_version: 5`
+        res: '"badcafe"' # string has to be JSON.stringified

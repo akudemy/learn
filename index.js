@@ -247,7 +247,7 @@ class Challenge {
 function runTest(fnName, test, content) {
   try {
     const testResult = vm.runInNewContext(content + `;
-      /* test runner */ ${fnName}(${test.args})`);
+      /* test runner */ ${fnName}(${test.args})`, { console });
 
     const result = {
       pass: false,
@@ -267,7 +267,7 @@ function runTest(fnName, test, content) {
       // `maxTime: 0.5` limits maximum amount of time a benchmark runs to 0.5s, compared to default 5s
       const benchRes = vm.runInNewContext(content + `;
         /* benchmark runner */ new Benchmark({maxTime: 0.5}, () => ${fnName}(${test.args})).run()`,
-        { Benchmark });
+        { Benchmark, console });
 
       // `stats.mean` is s, but `ms` are more manageable
       result.time = benchRes.stats.mean * 1000;
@@ -365,6 +365,7 @@ function validateChallengeById(cid) {
         'source',
         'tags',
         'difficulty',
+        'notes',
       ].includes(key)) {
         warn(`unknown key ${key}`)
       }
@@ -377,11 +378,13 @@ function validateChallengeById(cid) {
     if (!challenge.tests.correctness) {
       warn('no suite named `correctness`');
     }
-    if (!challenge.tests.edge_cases) {
-      warn('no suite named `edge_cases`');
-    }
-    if (!challenge.tests.performance) {
-      warn('no suite named `performance`');
+    if (!challenge.tags.includes('interactive')) {
+      if (!challenge.tests.edge_cases) {
+        warn('no suite named `edge_cases`');
+      }
+      if (!challenge.tests.performance) {
+        warn('no suite named `performance`');
+      }
     }
 
     for (const suiteName in challenge.tests) {
