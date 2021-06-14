@@ -342,14 +342,14 @@ function validateChallengeById(cid) {
       }
 
       const difficulties = [
-        'trivial',
+        'test',
         'easy',
         'medium',
         'hard',
         'Industry Standard (supervised)',
         'Industry Standard',
         'very hard',
-      ]
+      ];
       if (!difficulties.includes(challenge.difficulty)) {
         warn(`difficulty "${challenge.difficulty}" not in the predefined list of possibilities (${difficulties.join(', ')})`);
       }
@@ -378,12 +378,14 @@ function validateChallengeById(cid) {
     if (!challenge.tests.correctness) {
       warn('no suite named `correctness`');
     }
-    if (!challenge.tags.includes('interactive')) {
-      if (!challenge.tests.edge_cases) {
-        warn('no suite named `edge_cases`');
-      }
-      if (!challenge.tests.performance) {
-        warn('no suite named `performance`');
+    if (challenge.tags) {
+      if (!challenge.tags.includes('interactive')) {
+        if (!challenge.tests.edge_cases) {
+          warn('no suite named `edge_cases`');
+        }
+        if (!challenge.tests.performance) {
+          warn('no suite named `performance`');
+        }
       }
     }
 

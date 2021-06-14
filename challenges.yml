@@ -5,7 +5,7 @@
 #   tags?:
 #     - maths
 #     - data_structures
-#   difficulty?: trivial | easy | medium | hard | Industry Standard (supervised) | Industry Standard | very hard
+#   difficulty?: test | easy | medium | hard | Industry Standard (supervised) | Industry Standard | very hard
 #   template: |
 #     // description of problem
 #     function <fn_name>(arg1 /* type, properties */, arg2 ...) {
@@ -52,7 +52,7 @@ add:
   source: testing sample
   tags:
     - maths
-  difficulty: trivial
+  difficulty: test
   fn_name: add
   template: |
     function add(a, b) {
@@ -93,7 +93,7 @@ add:
         max_time_ms: 100
 parens-count:
   source: modified from https://adventofcode.com/2015/day/1
-  difficulty: trivial
+  difficulty: easy
   fn_name: count
   template: |
     // You're given a string of characters, some of which are `()`.
@@ -117,7 +117,7 @@ parens-count:
       }
       return state;
     }
-  recommended_time_ms: 180e3 # 3 min
+  recommended_time_ms: 300e3 # 5 min
   tests:
     correctness:
       one_up:
@@ -174,7 +174,7 @@ visit-cells:
   source: modified https://adventofcode.com/2015/day/3
   tags:
     - data_structures
-  difficulty: easy
+  difficulty: medium
   fn_name: countVisitedCells
   template: |
     // A cursor is traversing an infinite two-dimensional grid of cells
@@ -211,7 +211,7 @@ visit-cells:
 
       return cells.size;
     }
-  recommended_time_ms: 240e3 # 4 minutes
+  recommended_time_ms: 480e3 # 8 minutes
   tests:
     correctness:
       right:
@@ -524,7 +524,7 @@ look-and-say:
   tags:
     - strings
   difficulty: medium
-  recommended_time_ms: 300e3 # 5min
+  recommended_time_ms: 900e3 # 15min
   fn_name: lookAndSay
   template: |
     // A "look and say" iteration of a number generates a new number that is a compressed
