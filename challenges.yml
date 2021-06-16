@@ -1387,3 +1387,136 @@ find-stolen-money:
           account#e07baa3 = ping: 6, cpu_cores: 3, battery_perc: 0
           account#ef41b63 = login_duration: 10, ping: 3, browser_version: 5`
         res: '"badcafe"' # string has to be JSON.stringified
+hard-disk-cursor:
+  tags:
+    - maths
+    - trigonometry
+    - optimization
+  difficulty: Industry Standard
+  recommended_time_ms: 1800e3 # 30 min. Took me 2 minutes, without reading task
+  fn_name: getPos
+  # tool for help: https://calculator.academy/rotation-calculator-new-coordinates-by-rotation/#f1p1
+  template: |
+    // You're extending a driver for reading a new type of hard disk.
+    // Your task is to figure out where the cursor (/head/tip) ends
+    // up after following all the instructions.
+    //
+    // In this new type of hard disk, the cursor is mounted at the end of
+    // a retractable stick, which can be rotated by any amount at the 
+    // anchor point (coordinate `[0,0]`), in the middle of the disk.
+    //
+    // The coordinate system follows `x,y` conventions in function graphing:
+    // - `x` increases when going right, and decreases below `0` when going left
+    // - `y` increases when going up, and decreases below `0` when going down
+    // - so `[4,1]` is 4 units to the right, and 1 unit up (denoted by `P` in the graph below)
+    //
+    //       y ^
+    //         |
+    //      1 >|   P   x
+    //  -------+------->
+    //         |   ^
+    //         |   4
+    //
+    // The cursor starts with a distance of `0`, and the stick with a rotation 
+    // of `0` degrees, which is facing towards positive `x` (to the right).
+    // A rotation between 0 and 90 degrees from `[1,0]` increases the `y` and decreases the `x`
+    // 
+    // The instructions are an array of floating numbers, from `-1000` to `+1000`.
+    // The 1st instruction is the distance by which the stick should expand (or retract if negative).
+    // The 2nd instruction is the amount of degrees by which the stick should rotate, in degrees.
+    // After that, the role of each instruction cycles, so that the 3rd instruction is a distance,
+    // the 4th is a rotation, the 5th a distance, 6th a rotation, and so on.
+    //
+    // At what coordinates does the cursor end up after following all the instructions?
+    // Round the result to the nearest integer.
+    //
+    // For example, if the instructions were `[10, 45, -7, 135]`, the cursor would:
+    //  1. extend by 10 units, so that its coordinates are now `[10,0]`
+    //  2. rotate by 45 degrees (half of 90): `[~7.071, ~7.071]`
+    //  3. retract by 7 units (keeping the 45 degree angle): `[~2.12, ~2.12]`
+    //  4. rotate by 135 degrees (90 + half of 90): `[-3, 0]`
+    //
+    // So you would return the array `[-3, 0]`.
+
+    function getPos(instructions /* Array<number>, length <= 1_000_000 */) {
+      
+    }
+  sample_solution: |
+    function getPos(instructions /* Array<number>, length <= 1_000_000 */) {
+      let dist = 0;
+      let angle = 0;
+
+      for (let i = 0; i < instructions.length; i += 2) {
+        dist += instructions[i];
+        if (i + 1 < instructions.length) {
+          angle += instructions[i+1];
+        }
+      }
+
+      const rad = angle/180 * Math.PI;
+
+      return [
+        Math.round(Math.cos(rad) * dist),
+        Math.round(Math.sin(rad) * dist),
+      ]
+    }
+  tests:
+    # test design guidelines:
+    #   the user can get 40% of the score just by accounting for multiples of 90.
+    #   and another 30% by realizing they can just add angles and lengths 
+    #     (optimization, but also brings e.g. 45+135 to a multiple of 90)
+    #   the remaining 30% is using trigonometry
+    correctness:
+      1-0deg:
+        visible: true
+        args: '[1, 0]'
+        res: [1,0]
+      1-90deg:
+        visible: true
+        args: '[1, 90]'
+        res: [0,1]
+      1-180deg:
+        visible: true
+        args: '[1, 180]'
+        res: [-1,0]
+      10-45deg_7-135deg:
+        visible: true
+        args: '[10, 45, -7, 135]'
+        res: [-3, 0]
+      10-45deg:
+        visible: true
+        args: '[10, 45]'
+        res: [7, 7] # Math.cos(45deg) = Math.sin(45deg) = 0.7071
+      9x-1-10deg:
+        args: '[1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10]'
+        res: [0, 9]
+      random10:
+        args: '[]'
+        res: [0, 0]
+    edge_cases:
+      neg_angle:
+        args: '[1, -90]'
+        res: [0, -1]
+      angle_over_360:
+        args: '[1, 360+90]'
+        res: [0, 1]
+      0_extension:
+        args: '[0, 90]'
+        res: [0, 0]
+      floating_point_extensions:
+        args: '[1.9, 0]'
+        res: [2, 0]
+        score: 2
+      empty_instructions:
+        args: '[]'
+        res: [0, 0]
+      ending_in_extension:
+        args: '[2, 90, 1]'
+        res: [0, 3]
+        score: 2
+    performance:
+      1M_instructions:
+        args: 'Array(1_000_000).fill().map((_, i) => ((i * 327.234) % 997) - 997)' # computing this is counted in the benchmark
+        res: [-109245483, 224034950]
+        score: 3
+        max_time_ms: 200 # took 85 on my machine 

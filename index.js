@@ -254,7 +254,9 @@ function runTest(fnName, test, content) {
       res: testResult,
     }
 
-    if (JSON.stringify(testResult) == test.res) {
+    const toCompare = typeof test.res === 'string' ? test.res : JSON.stringify(test.res);
+
+    if (JSON.stringify(testResult) == toCompare) {
       result.pass = true;
     } else if (typeof test.res === 'number' && test.delta) {
       // test.res within delta/2 of testResult
